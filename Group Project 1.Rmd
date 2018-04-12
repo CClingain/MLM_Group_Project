@@ -105,6 +105,9 @@ The anova test comparing model 3 to model 4 has a p-value < 2.2e-16, so we rejec
 ```{r random slope teachers}
 #ONE BY ONE
 #mathknow
+
+#bianca: QUestion, why is it (1 + mathknow|schoolid) rather than (0 + mathknow|schoolid)?
+
 rst.1 <-lmer(Math1st~housepov+mathknow+yearstea+mathprep+sex+minority+ses+(1+mathknow||schoolid)+(1|classid),data=classroom)
 summary(rst.1)
 #yearstea
