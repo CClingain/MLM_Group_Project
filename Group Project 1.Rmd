@@ -1,7 +1,6 @@
-<<<<<<< HEAD
----
+--
 title: 'Group Project #1'
-author: "Clare Clingain"
+author: "Bianca Brusco, Clare Clingain, Kaushik Mohan, & Frankie Wunschel"
 date: "April 10, 2018"
 output: pdf_document
 ---
@@ -364,5 +363,3 @@ Report unusual changes in variance
 Is the more complex model justified?
 Write the equation.
 
->>>>>>> f09365b7e2f42194f750dd20efbc6b7013c08391
-##
