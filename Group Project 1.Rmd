@@ -11,7 +11,7 @@ library(dplyr)
 require(lme4)
 require(lattice)
 require(lmerTest)
-classroom <- read.csv("~/Spring 2018 Multi-Level Modeling Nested Data/classroom.csv")
+classroom <- read.csv("data/classroom.csv")
 ```
 
 #Part 1
@@ -42,21 +42,40 @@ where $\zeta_{k} \sim N(0, \sigma_\zeta^2), \eta_{jk} \sim N(0, \sigma_\eta^2),$
 ```{r school-level predictors}
 model2 <- lmer(Math1st~housepov+(1|schoolid/classid),data=classroom)
 summary(model2)
-anova(model1, model2) #is sig
+anova(model1, model2, refit = F) #is sig
 ```
 
-Change in zeta: decreased to 250.93; eta = 82.36; resid = 1146.95
+Change in $\sigma_\zeta^2$: decreased to 250.93;  
+$\sigma_\eta^2$= 82.36;  $\sigma_\epsilon^2$ = 1146.95
+
+The anova test comparing model 1 to model 2 has a p-value : 3.39e-05, so we reject the null hypothesis at our $\alpha = 0.05$ and conclude that it makes sense to include the school level predictor, housepov. 
 
 ##Add all classroom-level predictors
 
 ```{r classroom-level predictors}
 model3 <- lmer(Math1st~housepov+mathknow+yearstea+mathprep+(1|schoolid/classid),data=classroom)
 summary(model3)
+
+
+## CHECK...?
+
+
+## creating reducted dataset taking away missing data
+classroom_red = na.omit(classroom)
+model2_red <- lmer(Math1st~housepov+(1|schoolid/classid),data=classroom_red)
+model3_red <- lmer(Math1st~housepov+mathknow+yearstea+mathprep+(1|schoolid/classid),data=classroom_red)
+
+anova(model2_red, model3_red, refit = F)
 ```
 
-Change in epsilon and eta: epsilon decreased to 1136.43, eta increased to 94.36; zeta = 223.31
-Why is epsilon reduced but not eta: explaining what's happening at student level but not classroom level
-May increase because of sample decrease (missing data)
+Change in $\sigma_\epsilon^2$ and $\sigma_\eta^2$: $\sigma_\epsilon^2$ decreased to 1136.43, $\sigma_\eta^2$ increased to 94.36; $\sigma_\zeta^2$ = 223.31
+
+Why is epsilon reduced but not eta: explaining what's happening at student level but not classroom level. Moreover, adding class level predictors makes it so that more of the overall variation is explained by "structured" variation rather than by unstructured ($\epsilon$)
+May increase because of sample decrease (missing data) --
+
+The anova test comparing model 2 to model 3 has a p-value 0.08, so we fail to reject the null hypothesis at our $\alpha = 0.05$ and conclude that ??it does not make sense to include classsroom level predictors.???
+
+
 
 ##Add all student-level predictors
 
@@ -64,13 +83,22 @@ May increase because of sample decrease (missing data)
 #Add all student-level predictors
 model4 <- lmer(Math1st~housepov+mathknow+yearstea+mathprep+sex+minority+ses+(1|schoolid/classid),data=classroom)
 summary(model4)
-anova(model3, model4) #is sig
+
+## to test it with model 2 since anova for mod 3 not sig
+
+model4_red <- lmer(Math1st~housepov+mathknow+yearstea+mathprep+sex+minority+ses+(1|schoolid/classid),data=classroom_red)
+
+anova(model2_red, model4_red, refit = F)
+anova(model3, model4, refit = F) #is sig
 ```
 
-Change in zeta eta epsilon; epsilon decreased to 1064.95, eta  decreased to 93.89, zeta decreased to 169.45
+Change in zeta eta epsilon; $\sigma_\epsilon^2$ decreased to 1064.95, $\sigma_\eta^2$  decreased to 93.89, $\sigma_\zeta^2$ decreased to 169.45
 School level may drop because students are similar in one school but different across schools
 
 $\hat{math1st_{ijk}} = \beta_{0ijk} + \zeta_{k} + \eta_{jk} + \epsilon_{ijk} + \beta_1*Housepov_k +\beta_2*Mathknow_{jk} + \beta_3*YearsTea_{jk} + \beta_4*Mathprep_{jk} + \beta_5*sex_{ijk} + \beta_6*minority_{ijk} + \beta_7*ses_{ijk}$
+
+The anova test comparing model 3 to model 4 has a p-value < 2.2e-16, so we reject the null hypothesis and conclude that it makes sense to include student level predictors. Moreover, the Chi-Sq test comparing model 2 to model 4 has a p-value < 2.2e-16, so we conclude that the model with student level predictors (as a block) improves compared to the model with only school-level predictors. 
+
 
 ##Random Slope for Teacher-level predictor varying at school-level
 
@@ -150,7 +178,6 @@ summary(rss.4)
 rss.5 <-lmer(Math1st~housepov+mathknow+yearstea+mathprep+sex+minority+ses+(1+minority||schoolid)+(1|classid),data=classroom)
 summary(rss.5)
 #SES
-rss.6 <-lmer(Math1st~housepov+mathknow+yearstea+mathprep+sex+minority+ses+(1+ses||schoolid)+(1|classid),data=classroom)
 summary(rss.6)
 ```
 
