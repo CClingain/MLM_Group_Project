@@ -164,9 +164,11 @@ summary(rssc.4)
 #minority
 rssc.5 <-lmer(Math1st~housepov+mathknow+yearstea+mathprep+sex+minority+ses+(1+minority|schoolid)+(1|classid),data=classroom)
 summary(rssc.5)
+anova(model4, rssc.5) #sig
 #SES
 rssc.6 <-lmer(Math1st~housepov+mathknow+yearstea+mathprep+sex+minority+ses+(1+ses|schoolid)+(1|classid),data=classroom)
 summary(rssc.6)
+anova(model4, rssc.6)
 ```
 
 Report unusual changes in variance
@@ -175,191 +177,8 @@ Report unusual changes in variance
 
 ```{r}
 #Take two predictors that had sig random slopes and add to model, test for need of one conditional on the other
+#minority is sig
 ```
 
 Is the more complex model justified?
 Write the equation.
-
-=======
----
-title: 'Group Project #1'
-author: "Clare Clingain"
-date: "April 10, 2018"
-output: pdf_document
----
-
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-library(dplyr)
-require(lme4)
-require(lattice)
-require(lmerTest)
-classroom <- read.csv("~/Spring 2018 Multi-Level Modeling Nested Data/classroom.csv")
-```
-
-#Part 1
-
-##Create 1st grade variable
-```{r}
-classroom <- classroom %>% mutate(Math1st = mathkind + mathgain)
-```
-
-##UMM Model
-
-```{r UMM}
-#UMM model
-model1 <- lmer(Math1st~(1|schoolid/classid),data=classroom)
-summary(model1)
-#the ICC
-#class
-85.46/(1146.8+280.68+85.46)
-#school
-280.68/(1146.8+280.68+85.46)
-```
-
-$Math1st_{ijk} = \beta_{0ijk} + \zeta_{k} + \eta_{jk} + \epsilon_{ijk}$
-where $\zeta_{k} \sim N(0, \sigma_\zeta^2), \eta_{jk} \sim N(0, \sigma_\eta^2),$ and $\epsilon_{ijk} \sim N(0, \sigma_\epsilon^2)$, all independent of each other
-
-##Add all school-level predictors
-
-```{r school-level predictors}
-model2 <- lmer(Math1st~housepov+(1|schoolid/classid),data=classroom)
-summary(model2)
-anova(model1, model2) #is sig
-```
-
-Change in zeta: decreased to 250.93; eta = 82.36; resid = 1146.95
-
-##Add all classroom-level predictors
-
-```{r classroom-level predictors}
-model3 <- lmer(Math1st~housepov+mathknow+yearstea+mathprep+(1|schoolid/classid),data=classroom)
-summary(model3)
-```
-
-Change in epsilon and eta: epsilon decreased to 1136.43, eta increased to 94.36; zeta = 223.31
-Why is epsilon reduced but not eta: explaining what's happening at student level but not classroom level
-May increase because of sample decrease (missing data)
-
-##Add all student-level predictors
-
-```{r student-level predictors}
-#Add all student-level predictors
-model4 <- lmer(Math1st~housepov+mathknow+yearstea+mathprep+sex+minority+ses+(1|schoolid/classid),data=classroom)
-summary(model4)
-anova(model3, model4) #is sig
-```
-
-Change in zeta eta epsilon; epsilon decreased to 1064.95, eta  decreased to 93.89, zeta decreased to 169.45
-School level may drop because students are similar in one school but different across schools
-
-$\hat{math1st_{ijk}} = \beta_{0ijk} + \zeta_{k} + \eta_{jk} + \epsilon_{ijk} + \beta_1*Housepov_k +\beta_2*Mathknow_{jk} + \beta_3*YearsTea_{jk} + \beta_4*Mathprep_{jk} + \beta_5*sex_{ijk} + \beta_6*minority_{ijk} + \beta_7*ses_{ijk}$
-
-##Random Slope for Teacher-level predictor varying at school-level
-
-```{r random slope teachers}
-#ONE BY ONE
-#mathknow
-rst.1 <-lmer(Math1st~housepov+mathknow+yearstea+mathprep+sex+minority+ses+(1+mathknow||schoolid)+(1|classid),data=classroom)
-summary(rst.1)
-#yearstea
-rst.2 <-lmer(Math1st~housepov+mathknow+yearstea+mathprep+sex+minority+ses+(1+yearstea||schoolid)+(1|classid),data=classroom)
-summary(rst.2)
-#mathprep
-rst.3 <-lmer(Math1st~housepov+mathknow+yearstea+mathprep+sex+minority+ses+(1+mathprep||schoolid)+(1|classid),data=classroom)
-summary(rst.3)
-```
-
-Why housepov bad idea?
-
-##Allowing correlations with random intercepts
-
-```{r correlation with random intercepts}
-#ONE BY ONE
-#mathknow
-rstc.1 <-lmer(Math1st~housepov+mathknow+yearstea+mathprep+sex+minority+ses+(1+mathknow|schoolid)+(1|classid),data=classroom)
-summary(rstc.1)
-#yearstea
-rstc.2 <-lmer(Math1st~housepov+mathknow+yearstea+mathprep+sex+minority+ses+(1+yearstea|schoolid)+(1|classid),data=classroom)
-summary(rstc.2)
-#mathprep
-rstc.3 <-lmer(Math1st~housepov+mathknow+yearstea+mathprep+sex+minority+ses+(1+mathprep|schoolid)+(1|classid),data=classroom)
-summary(rstc.3)
-```
-
-anything unusual? Some of the correlations are exactly -1 between the random slope and the random intercept. 
-why might this have occurred? (hint: what did you add to the model?)
-
-##Random slopes for student-level predictors varying at classroom level
-
-```{r random slope student-level}
-#ONE BY ONE
-#sex
-rss.1 <-lmer(Math1st~housepov+mathknow+yearstea+mathprep+sex+minority+ses+(1+sex||classid)+(1|schoolid),data=classroom)
-summary(rss.1)
-#minority
-rss.2 <-lmer(Math1st~housepov+mathknow+yearstea+mathprep+sex+minority+ses+(1+minority||classid)+(1|schoolid),data=classroom)
-summary(rss.2)
-#SES
-rss.3 <-lmer(Math1st~housepov+mathknow+yearstea+mathprep+sex+minority+ses+(1+ses||classid)+(1|schoolid),data=classroom)
-summary(rss.3)
-```
-
-why is this a bad idea to include a classroom-level variable with random slopes at classroom-level? Might not explain much variance.
-
-##Allowing for correlations with random intercepts
-
-```{r correlations}
-#ONE BY ONE
-#sex
-rssc.1 <-lmer(Math1st~housepov+mathknow+yearstea+mathprep+sex+minority+ses+(1+sex|classid)+(1|schoolid),data=classroom)
-summary(rssc.1)
-#minority
-rssc.2 <-lmer(Math1st~housepov+mathknow+yearstea+mathprep+sex+minority+ses+(1+minority|classid)+(1|schoolid),data=classroom)
-summary(rssc.2)
-#SES
-rssc.3 <-lmer(Math1st~housepov+mathknow+yearstea+mathprep+sex+minority+ses+(1+ses|classid)+(1|schoolid),data=classroom)
-summary(rssc.3)
-```
-
-##Random slopes for student-level predictors varying at school level
-
-```{r random slopes student-level}
-#ONE BY ONE
-#sex
-rss.4 <-lmer(Math1st~housepov+mathknow+yearstea+mathprep+sex+minority+ses+(1+sex||schoolid)+(1|classid),data=classroom)
-summary(rss.4)
-#minority
-rss.5 <-lmer(Math1st~housepov+mathknow+yearstea+mathprep+sex+minority+ses+(1+minority||schoolid)+(1|classid),data=classroom)
-summary(rss.5)
-#SES
-rss.6 <-lmer(Math1st~housepov+mathknow+yearstea+mathprep+sex+minority+ses+(1+ses||schoolid)+(1|classid),data=classroom)
-summary(rss.6)
-```
-
-##Allowing for correlations with random intercepts
-
-```{r correlations student-school}
-#ONE BY ONE
-#sex
-rssc.4 <-lmer(Math1st~housepov+mathknow+yearstea+mathprep+sex+minority+ses+(1+sex|schoolid)+(1|classid),data=classroom)
-summary(rssc.4)
-#minority
-rssc.5 <-lmer(Math1st~housepov+mathknow+yearstea+mathprep+sex+minority+ses+(1+minority|schoolid)+(1|classid),data=classroom)
-summary(rssc.5)
-#SES
-rssc.6 <-lmer(Math1st~housepov+mathknow+yearstea+mathprep+sex+minority+ses+(1+ses|schoolid)+(1|classid),data=classroom)
-summary(rssc.6)
-```
-
-Report unusual changes in variance
-
-##Complex model better?
-
-```{r}
-#Take two predictors that had sig random slopes and add to model, test for need of one conditional on the other
-```
-
-Is the more complex model justified?
-Write the equation.
-
