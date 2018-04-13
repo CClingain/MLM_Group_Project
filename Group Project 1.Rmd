@@ -110,15 +110,18 @@ The anova test comparing model 3 to model 4 has a p-value < 2.2e-16, so we rejec
 
 rst.1 <-lmer(Math1st~housepov+mathknow+yearstea+mathprep+sex+minority+ses+(1+mathknow||schoolid)+(1|classid),data=classroom)
 summary(rst.1)
+rand(rst.1) #not sig
 #yearstea
 rst.2 <-lmer(Math1st~housepov+mathknow+yearstea+mathprep+sex+minority+ses+(1+yearstea||schoolid)+(1|classid),data=classroom)
 summary(rst.2)
+rand(rst.2)
 #mathprep
 rst.3 <-lmer(Math1st~housepov+mathknow+yearstea+mathprep+sex+minority+ses+(1+mathprep||schoolid)+(1|classid),data=classroom)
 summary(rst.3)
+rand(rst.3)
 ```
 
-Why housepov bad idea?
+Why housepov bad idea? There is only one data point per school, so we cannot have a random slope since we can't even calculate a slope.
 
 ##Allowing correlations with random intercepts
 
@@ -127,12 +130,15 @@ Why housepov bad idea?
 #mathknow
 rstc.1 <-lmer(Math1st~housepov+mathknow+yearstea+mathprep+sex+minority+ses+(1+mathknow|schoolid)+(1|classid),data=classroom)
 summary(rstc.1)
+rand(rstc.1)
 #yearstea
 rstc.2 <-lmer(Math1st~housepov+mathknow+yearstea+mathprep+sex+minority+ses+(1+yearstea|schoolid)+(1|classid),data=classroom)
 summary(rstc.2)
+rand(rstc.2) #just over .05
 #mathprep
 rstc.3 <-lmer(Math1st~housepov+mathknow+yearstea+mathprep+sex+minority+ses+(1+mathprep|schoolid)+(1|classid),data=classroom)
 summary(rstc.3)
+rand(rstc.3)
 ```
 
 anything unusual? Some of the correlations are exactly -1 between the random slope and the random intercept. 
@@ -145,12 +151,15 @@ why might this have occurred? (hint: what did you add to the model?)
 #sex
 rss.1 <-lmer(Math1st~housepov+mathknow+yearstea+mathprep+sex+minority+ses+(1+sex||classid)+(1|schoolid),data=classroom)
 summary(rss.1)
+rand(rss.1)
 #minority
 rss.2 <-lmer(Math1st~housepov+mathknow+yearstea+mathprep+sex+minority+ses+(1+minority||classid)+(1|schoolid),data=classroom)
 summary(rss.2)
+rand(rss.1)
 #SES
 rss.3 <-lmer(Math1st~housepov+mathknow+yearstea+mathprep+sex+minority+ses+(1+ses||classid)+(1|schoolid),data=classroom)
 summary(rss.3)
+rad(rss.3)
 ```
 
 why is this a bad idea to include a classroom-level variable with random slopes at classroom-level? Might not explain much variance.
@@ -162,12 +171,15 @@ why is this a bad idea to include a classroom-level variable with random slopes 
 #sex
 rssc.1 <-lmer(Math1st~housepov+mathknow+yearstea+mathprep+sex+minority+ses+(1+sex|classid)+(1|schoolid),data=classroom)
 summary(rssc.1)
+rand(rssc.1)
 #minority
 rssc.2 <-lmer(Math1st~housepov+mathknow+yearstea+mathprep+sex+minority+ses+(1+minority|classid)+(1|schoolid),data=classroom)
 summary(rssc.2)
+rand(rssc.2)
 #SES
 rssc.3 <-lmer(Math1st~housepov+mathknow+yearstea+mathprep+sex+minority+ses+(1+ses|classid)+(1|schoolid),data=classroom)
 summary(rssc.3)
+rand(rssc.3)
 ```
 
 ##Random slopes for student-level predictors varying at school level
@@ -177,11 +189,15 @@ summary(rssc.3)
 #sex
 rss.4 <-lmer(Math1st~housepov+mathknow+yearstea+mathprep+sex+minority+ses+(1+sex||schoolid)+(1|classid),data=classroom)
 summary(rss.4)
+rand(rss.4)
 #minority
 rss.5 <-lmer(Math1st~housepov+mathknow+yearstea+mathprep+sex+minority+ses+(1+minority||schoolid)+(1|classid),data=classroom)
 summary(rss.5)
+rand(rss.5)
 #SES
-summary(rss.6)
+rss.5 <-lmer(Math1st~housepov+mathknow+yearstea+mathprep+sex+minority+ses+(1+ses||schoolid)+(1|classid),data=classroom)
+summary(rss.6) #IS SIG
+rand(rss.6)
 ```
 
 ##Allowing for correlations with random intercepts
@@ -191,14 +207,15 @@ summary(rss.6)
 #sex
 rssc.4 <-lmer(Math1st~housepov+mathknow+yearstea+mathprep+sex+minority+ses+(1+sex|schoolid)+(1|classid),data=classroom)
 summary(rssc.4)
+rnd(rssc.4)
 #minority
 rssc.5 <-lmer(Math1st~housepov+mathknow+yearstea+mathprep+sex+minority+ses+(1+minority|schoolid)+(1|classid),data=classroom)
 summary(rssc.5)
-anova(model4, rssc.5) #sig
+rand(rssc.5) #sig
 #SES
 rssc.6 <-lmer(Math1st~housepov+mathknow+yearstea+mathprep+sex+minority+ses+(1+ses|schoolid)+(1|classid),data=classroom)
 summary(rssc.6)
-anova(model4, rssc.6)
+rand(rssc.6) #not sig
 ```
 
 Report unusual changes in variance
@@ -207,7 +224,10 @@ Report unusual changes in variance
 
 ```{r}
 #Take two predictors that had sig random slopes and add to model, test for need of one conditional on the other
-#minority is sig
+#minority is sig for correlated
+#ses is sig for uncorrelated
+complex <-lmer(Math1st~housepov+mathknow+yearstea+mathprep+sex+minority+ses+(0+ses|schoolid)+(1+minority|schoolid)+(1|classid),data=classroom)
+rand(complex)
 ```
 
 Is the more complex model justified?
