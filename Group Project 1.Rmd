@@ -105,9 +105,6 @@ The anova test comparing model 3 to model 4 has a p-value < 2.2e-16, so we rejec
 ```{r random slope teachers}
 #ONE BY ONE
 #mathknow
-
-#bianca: QUestion, why is it (1 + mathknow|schoolid) rather than (0 + mathknow|schoolid)?
-
 rst.1 <-lmer(Math1st~housepov+mathknow+yearstea+mathprep+sex+minority+ses+(1+mathknow||schoolid)+(1|classid),data=classroom)
 summary(rst.1)
 rand(rst.1) #not sig
@@ -121,7 +118,8 @@ summary(rst.3)
 rand(rst.3)
 ```
 
-Why housepov bad idea? There is only one data point per school, so we cannot have a random slope since we can't even calculate a slope.
+\textbf{Question:} Why housepov bad idea? 
+\textbf{Answer:} There is only one data point per school, so we cannot have a random slope since we can't even calculate a slope.
 
 ##Allowing correlations with random intercepts
 
@@ -141,8 +139,8 @@ summary(rstc.3)
 rand(rstc.3)
 ```
 
-anything unusual? Some of the correlations are exactly -1 between the random slope and the random intercept. 
-why might this have occurred? (hint: what did you add to the model?)
+\textbf{Question:} Anything unusual about the variances? Why might this have occurred? (hint: what did you add to the model?)
+\textbf{Answer:} The random slope for mathknow greatly increases in the second model, which is probably due to its correlation with the random intercept at the school-level. 
 
 ##Random slopes for student-level predictors varying at classroom level
 
@@ -230,5 +228,5 @@ complex <-lmer(Math1st~housepov+mathknow+yearstea+mathprep+sex+minority+ses+(0+s
 rand(complex)
 ```
 
-Is the more complex model justified?
+The complex model is justified since the rand test shows that the random slopes are both statistically significant at the 0.05 level.
 Write the equation.
