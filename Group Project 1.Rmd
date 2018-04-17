@@ -244,14 +244,70 @@ $ \hat{Math1st_{ijk}} = \beta_0 + \beta_1*housepov_{k} + \beta_2*mathknow_{jk} +
 
 where $\zeta_{0k} \sim N(0, \sigma_{\zeta_0}^2),\zeta_{6k} \sim N(0, \sigma_{\zeta_6}^2), \zeta_{7k} \sim N(0, \sigma_{\zeta_7}^2), \eta_{jk} \sim N(0, \sigma_\eta^2),$ and $\epsilon_{ijk} \sim N(0, \sigma_\epsilon^2)$, all independent of each other.
 
-\textbf{Quesiton:} For UCM, write down: $V_C$, $V_S$, $V_E$ for the three variance components (simply the estimates). Think of them as possibly varying with a covariate, though.
+## $V_C$, $V_S$, and $V_E$
+
+\textbf{Question:} For UCM, write down: $V_C$, $V_S$, $V_E$ for the three variance components (simply the estimates). Think of them as possibly varying with a covariate, though.
+
+\textbf{Answer:} For the UCM, $V_C$ = 85.46, $V_S$ = 280.68, and $V_E$ = 1146.80
+
+\textbf{Question:} For the most complicated (all fixed effects) random INTERCEPTS ONLY model, what are: $V_C$, $V_S$, $V_E$?
+
+\textbf{Answer:} For the most complicated fixed effects model with only random intercepts, $V_C$ = 93.89, $V_S$ = 169.45, and $V_E$ = 1064.95.
+
+\textbf{Question:} By what fraction did these each decrease with the new predictors in the model?
 
 \textbf{Answer:} 
 
-\textbf{Quesiton:} For the most complicated (all fixed effects) random INTERCEPTS ONLY model, what are: $V_C$, $V_S$, $V_E$?
+\textbf{Question:} Now consider the model with a random slope in ses. What are: $V_C$, $V_S(ses=0)$, $V_E$ ? We need to list 'ses=0' here, or we don't know how to use the slope variance
+
+\textbf{Answer:} For the model with a random slope in ses at the school level, $V_C$ = 88.56, $V_S(ses=0)$ = 167.98, and $V_E$ = 1035.12.
+
+\textbf{Question:} What are: $V_S(ses=-0.50)$, $V_S(ses=+0.5)$ ?
+
+\textbf{Answer:} In this model, in which the random slope for SES is uncorrelated with the random school-level intercept, $V_S(ses=-0.50) = 167.98 + (-.5)^2*72.50 + 2*(-.5)*0*167.98*72.50 = 186.105$, and $V_S(ses=+0.5) = 167.98 + (.5)^2*72.50 + 2*(.5)*0*167.98*72.50 = 186.105$ 
+
+\textbf{Question:} Now consider the model with a random slope in minority. What are: $V_C$, $V_S(minority=0)$, $V_E$? We need to list 'minority=0' here, or we don't know how to use the slope variance
+
+\textbf{Answer:} For the model with a random slope in minority at the school level, $V_C$ = 86.69, $V_S(minority=0)$ = 381.20, and $V_E$ = 1039.39.
+
+\textbf{Question:} What are: $V_S(minority=0.25)$, $V_S(minority=+0.50)$, $V_S(minority=+0.75)$?
+
+\textbf{Answer:} In this model, in which the random slope for minority is correlated with the random school-level, intercept, 
+$V_S(minority=0.25) = 381.20 + (0.25)^2*343.13 + 2*(0.25)*(-0.83)*\sqrt{381.20}*\sqrt{343.13} = 252.5549$, 
+
+$V_S(minority=+0.50) = 381.20 + (0.50)^2*343.13 + 2*(0.50)*(-0.83)*\sqrt{381.20}*\sqrt{343.13} = 166.801$, and
+
+$V_S(minority=+0.75) = 381.20 + (0.25)^2*343.13 + 2*(0.25)*(-0.83)*\sqrt{381.20}*\sqrt{343.13} = 123.9384$.
+
+\textbf{Question:} Now consider the model with a random slope in ses & minority. What are: $V_C$, $V_S(minority=0,ses=0)$, $V_E$? We need to list 'ses=0, minority=0' here, or we don't know how to use the slope variance.
+
+\textbf{Answer:} For the model with a random slope in ses & minority, $V_C$ = 80.63, $V_S(minority=0,ses=0)$ = 404.54, and $V_E$ = 1009.73.
+
+\textbf{Question:} What are: $V_S(ses=0,minority=0.50)$, $V_S(ses=0.50,minority=0)$, $V_S(ses= 0.50, minority= 0.50)$?
+
+\textbf{Answer:} In this model, in which the random slope for ses is uncorrelated with the random intercept, but the random slope for minority is correlated with the random intercept,
+
+$V_S(ses=0,minority=0.50) = 404.54 + (0)^2*74.93 + (0.50)^2*336.04 + 2*0*0*404.54*74.93 + 2*(0.50)*(-0.83)*\sqrt{404.54}*\sqrt{336.04} = 182.5268$,
+
+$V_S(ses=0.50,minority=0) = 404.54 + (0.50)^2*74.93 + (0)^2*336.04 + 2*0.50*0*404.54*74.93 + 2*(0)*(-0.83)*\sqrt{404.54}*\sqrt{336.04} = 423.2725$
+
+$V_S(ses= 0.50, minority= 0.50) = 404.54 + (0.50)^2*74.93 + (0.50)^2*336.04 + 2*0.50*0*404.54*74.93 + 2*(0.50)*(-0.83)*\sqrt{404.54}*\sqrt{336.04} = 201.2593$
+
+\textbf{Question:} In the last model, what is a "likely" (+/- 1 sd) range for \eta_{0jk}
 
 \textbf{Answer:} 
 
-\textbf{Quesiton:} By what fraction did these each decrease with the new predictors in the model?
+\textbf{Question:} Can we make a similar statement about \zeta_{0k}?
 
 \textbf{Answer:} 
+
+\textbf{Question:} If you had a large value for \eta_{0jk}, would you expect a large or small or "any" value for: the two random slope terms, \zeta_{1k} and \zeta_{2k} for ses and minority?
+
+\textbf{Answer:} 
+
+\textbf{Question:} If you had a large value for \zeta_{0k}, would you expect a large or small or "any" value for: the two random slope terms, \zeta_{1k} and \zeta_{2k} for ses and minority (discuss each separately)?
+
+\textbf{Answer:} 
+
+# Part 2
+
