@@ -119,6 +119,7 @@ rand(rst.3)
 ```
 
 \textbf{Question:} Why housepov bad idea? 
+
 \textbf{Answer:} There is only one data point per school, so we cannot have a random slope since we can't even calculate a slope.
 
 ##Allowing correlations with random intercepts
@@ -140,6 +141,7 @@ rand(rstc.3)
 ```
 
 \textbf{Question:} Anything unusual about the variances? Why might this have occurred? (hint: what did you add to the model?)
+
 \textbf{Answer:} The random slope for mathknow greatly increases in the second model, which is probably due to its correlation with the random intercept at the school-level. 
 
 ##Random slopes for student-level predictors varying at classroom level
@@ -160,7 +162,9 @@ summary(rss.3)
 rad(rss.3)
 ```
 
-why is this a bad idea to include a classroom-level variable with random slopes at classroom-level? Might not explain much variance.
+\textbf{Question:} why is this a bad idea to include a classroom-level variable with random slopes at classroom-level? 
+
+\textbf{Answer:} It may not explain much variance. 
 
 ##Allowing for correlations with random intercepts
 
@@ -205,7 +209,7 @@ rand(rss.6)
 #sex
 rssc.4 <-lmer(Math1st~housepov+mathknow+yearstea+mathprep+sex+minority+ses+(1+sex|schoolid)+(1|classid),data=classroom)
 summary(rssc.4)
-rnd(rssc.4)
+rand(rssc.4)
 #minority
 rssc.5 <-lmer(Math1st~housepov+mathknow+yearstea+mathprep+sex+minority+ses+(1+minority|schoolid)+(1|classid),data=classroom)
 summary(rssc.5)
@@ -216,7 +220,9 @@ summary(rssc.6)
 rand(rssc.6) #not sig
 ```
 
-Report unusual changes in variance
+\textbf{Question:} Report unusual changes in variance.
+
+\textbf{Answer:} Perhaps most striking is the change in variance for the random slope term on minority. Previously, it was 0. However, it jumps to 343.13 in the correlated model. The variance for the random slope term on SES also increases, but the correlated random slope is not a significant addition to our model according to the rand test results.
 
 ##Complex model better?
 
@@ -228,5 +234,24 @@ complex <-lmer(Math1st~housepov+mathknow+yearstea+mathprep+sex+minority+ses+(0+s
 rand(complex)
 ```
 
-The complex model is justified since the rand test shows that the random slopes are both statistically significant at the 0.05 level.
-Write the equation.
+\textbf{Question:} Is the more complex model (with both random slopes in it) justified?
+
+\textbf{Answer:} The complex model is justified since the rand test shows that the random slopes are both statistically significant at the 0.05 level.
+
+The equation for the complex model is given by the following:
+
+$ \hat{Math1st_{ijk}} = \beta_0 + \beta_1*housepov_{k} + \beta_2*mathknow_{jk} + \beta_3*yearstea_{jk} + beta_4*mathprep_{jk} + \beta_5*sex_{ijk} + \beta_{6k}*ses_{ijk} + \beta_{7k}*minority_{ijk} + \zeta_{0k} + \zeta_{6k} + \zeta_{7k} + eta_{jk} + \epsilon_{ijk}$
+
+where $\zeta_{0k} \sim N(0, \sigma_{\zeta_0}^2),\zeta_{6k} \sim N(0, \sigma_{\zeta_6}^2), \zeta_{7k} \sim N(0, \sigma_{\zeta_7}^2), \eta_{jk} \sim N(0, \sigma_\eta^2),$ and $\epsilon_{ijk} \sim N(0, \sigma_\epsilon^2)$, all independent of each other.
+
+\textbf{Quesiton:} For UCM, write down: $V_C$, $V_S$, $V_E$ for the three variance components (simply the estimates). Think of them as possibly varying with a covariate, though.
+
+\textbf{Answer:} 
+
+\textbf{Quesiton:} For the most complicated (all fixed effects) random INTERCEPTS ONLY model, what are: $V_C$, $V_S$, $V_E$?
+
+\textbf{Answer:} 
+
+\textbf{Quesiton:} By what fraction did these each decrease with the new predictors in the model?
+
+\textbf{Answer:} 
