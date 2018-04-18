@@ -11,6 +11,7 @@ library(dplyr)
 require(lme4)
 require(lattice)
 require(lmerTest)
+library(ggplot2); vanillaR <- F
 classroom <- read.csv("data/classroom.csv")
 ```
 
@@ -295,7 +296,7 @@ $V_S(ses= 0.50, minority= 0.50) = 404.54 + (0.50)^2*74.93 + (0.50)^2*336.04 + 2*
 
 \textbf{Question:} In the last model, what is a "likely" (+/- 1 sd) range for \eta_{0jk}
 
-\textbf{Answer:} 
+\textbf{Answer:} For the complex model, the "likely" range for \eta{0jk} is 71.651 to 89.609.
 
 \textbf{Question:} Can we make a similar statement about \zeta_{0k}?
 
@@ -310,4 +311,59 @@ $V_S(ses= 0.50, minority= 0.50) = 404.54 + (0.50)^2*74.93 + (0.50)^2*336.04 + 2*
 \textbf{Answer:} 
 
 # Part 2
+
+##Running initial model
+
+```{r pt2 q1}
+#remove missing data -- not ideal, but have to do it for this analysis
+classroom2 <- na.omit(classroom)
+#model
+new1 <-lmer(Math1st~housepov+mathknow+yearstea+mathprep+sex+minority+ses+(1|schoolid)+(1|classid),data=classroom2)
+```
+
+##Residual that removes only the "fixed effects"
+*manually construct the residual that removes only the 'fixed effects'
+*hint: predict yhat, xb will generate the prediction for the outcome based on the fixed effects only
+* then subtract it from the outcome; call this residual: resFE
+```{r pt2 q2}
+#predicted scores
+pred.yhat <- predict(new1,re.form=~0)
+
+#residual
+resFE <- classroom2$Math1st-pred.yhat
+
+#show that it's not independent
+if (vanillaR) {
+ord <- order(unlist(tapply(classroom2$mathkind, classroom2$schoolid, median)))
+boxplot(split(classroom2$mathkind, classroom2$schoolid)[ord])
+} else {
+ggplot(classroom2, aes(x = reorder(schoolid, Math1st, FUN = median), y = Math1st)) +
+geom_boxplot()
+}
+```
+
+##Residuals for BLUPs random effects
+
+```{r pt2 q3}
+#getting predicted zeta_0 and eta_0
+ranefs <- ranef(new1)
+zeta0 <- ranefs$schoolid[,1]
+eta0 <- ranefs$classid[,1]
+#indexing
+idx.sch <- match(classroom2$schoolid, sort(unique(classroom2$schoolid))) 
+idx.cls <- match(classroom2$classid, sort(unique(classroom2$classid))) 
+classroom2$zeta0 <- zeta0[idx.sch]
+classroom2$eta0 <- eta0[idx.cls]
+#now subtract all from outcome
+resFE_RE <- classroom2$Math1st-pred.yhat-classroom2$zeta0-classroom2$eta0
+#show that it's not independent
+if (vanillaR) {
+ord <- order(unlist(tapply(resFE_RE, classroom2$schoolid, median)))
+boxplot(split(resFE_RE, classroom2$schoolid)[ord])
+}else{
+ggplot(classroom2, aes(x = reorder(schoolid, resFE_RE, FUN = median), y = resFE_RE)) +
+geom_boxplot()
+}
+```
+
 
