@@ -316,6 +316,7 @@ $V_S(ses= 0.50, minority= 0.50) = 404.54 + (0.50)^2*74.93 + (0.50)^2*336.04 + 2*
 
 ```{r pt2 q1}
 #remove missing data -- not ideal, but have to do it for this analysis
+classroom <- classroom %>% mutate(Math1st = mathkind + mathgain)
 classroom2 <- na.omit(classroom)
 #model
 new1 <-lmer(Math1st~housepov+mathknow+yearstea+mathprep+sex+minority+ses+(1|schoolid)+(1|classid),data=classroom2)
@@ -334,10 +335,10 @@ resFE <- classroom2$Math1st-pred.yhat
 
 #show that it's not independent
 if (vanillaR) {
-ord <- order(unlist(tapply(classroom2$mathkind, classroom2$schoolid, median)))
-boxplot(split(classroom2$mathkind, classroom2$schoolid)[ord])
+ord <- order(unlist(tapply(resFE, classroom2$schoolid, median)))
+boxplot(split(resFE, classroom2$schoolid)[ord])
 } else {
-ggplot(classroom2, aes(x = reorder(schoolid, Math1st, FUN = median), y = Math1st)) +
+ggplot(classroom2, aes(x = reorder(schoolid, resFE, FUN = median), y = resFE)) +
 geom_boxplot()
 }
 ```
@@ -369,13 +370,13 @@ geom_boxplot()
 ## Examining BLUPs for normality
 
 ```{r blups normality, fig.width=6, fig.height=4}
-par(mfrow=c(1,2))
-plot(density(zeta0), main ="Normality Check for Zeta")
-plot(density(eta0), main = "Normality Check for Eta")
-#look pretty normal
-qqnorm(zeta0);qqline(zeta0)
-qqnorm(eta0);qqline(eta0)
-#looking good
+par(mfrow=c(2,2))
+plot(density(classroom2$zeta0), main ="Normality Check for Zeta")
+plot(density(classroom2$eta0), main = "Normality Check for Eta")
+#looking strange
+qqnorm(classroom2$zeta0);qqline(classroom2$zeta0)
+qqnorm(classroom2$eta0);qqline(classroom2$eta0)
+#looking strange
 ```
 
 ##Simulation
@@ -388,7 +389,7 @@ school.sim <- rnorm(100,0,1) #no idea if this is the appraoch we should take??
 ##New Complex Model
 
 ```{r new complex model}
-classroom <- read.csv("data/classroom.csv")
+classroom <- read.csv("classroom.csv")
 classroom2 <- na.omit(classroom)
 newcomplex <-lmer(Math1st~housepov+mathknow+yearstea+mathprep+sex+minority+ses+(minority|schoolid)+(1|classid),data=classroom2)
 ```
@@ -404,10 +405,10 @@ resFE2 <- classroom2$Math1st-pred.yhat2
 
 #show that it's not independent
 if (vanillaR) {
-ord <- order(unlist(tapply(classroom2$Math1st, classroom2$schoolid, median)))
-boxplot(split(classroom2$Math1st, classroom2$schoolid)[ord])
+ord <- order(unlist(tapply(resFE2, classroom2$schoolid, median)))
+boxplot(split(resFE2, classroom2$schoolid)[ord])
 } else {
-ggplot(classroom2, aes(x = reorder(schoolid, Math1st, FUN = median), y = Math1st)) +
+ggplot(classroom2, aes(x = reorder(schoolid, resFE2, FUN = median), y = resFE2)) +
 geom_boxplot()
 }
 ```
@@ -419,11 +420,13 @@ geom_boxplot()
 ranefs2 <- ranef(newcomplex)
 zeta0c <- ranefs$schoolid[,1]
 eta0c <- ranefs$classid[,1]
+zeta1c <- ranefs2$schoolid[,2]
 #indexing
 classroom2$zeta0c <- zeta0c[idx.sch]
 classroom2$eta0c <- eta0c[idx.cls]
+classroom2$zeta1c <- zeta1c[idx.sch]
 #now subtract all from outcome
-resFE_RE2 <- classroom2$Math1st-pred.yhat-classroom2$zeta0c-classroom2$eta0c
+resFE_RE2 <- classroom2$Math1st-pred.yhat-classroom2$zeta0c-classroom2$eta0c-(classroom2$minority*classroom2$zeta1c)
 #show that it's not independent, but much less correlated than resFE
 if (vanillaR) {
 ord <- order(unlist(tapply(resFE_RE2, classroom2$schoolid, median)))
@@ -437,12 +440,12 @@ geom_boxplot()
 ##Examining Normality of BLUPs
 
 ```{r complex blup normality}
-par(mfrow=c(1,2))
-plot(density(zeta0c), main ="Normality Check for Zeta")
-plot(density(eta0c), main = "Normality Check for Eta")
+par(mfrow=c(2,2))
+plot(density(classroom2$zeta0c), main ="Normality Check for Zeta")
+plot(density(classroom2$eta0c), main = "Normality Check for Eta")
 #look pretty normal
-qqnorm(zeta0c);qqline(zeta0c)
-qqnorm(eta0c);qqline(eta0c)
+qqnorm(classroom2$zeta0c);qqline(classroom2$zeta0c)
+qqnorm(classroom2$eta0c);qqline(classroom2$eta0c)
 #looking good, but with a few possible outliers
 ```
 
