@@ -446,7 +446,8 @@ plot(density(classroom2$eta0c), main = "Normality Check for Eta")
 #look pretty normal
 qqnorm(classroom2$zeta0c);qqline(classroom2$zeta0c)
 qqnorm(classroom2$eta0c);qqline(classroom2$eta0c)
-#looking good, but with a few possible outliers
+#eta looking good, but with a few possible outliers
+#zeta is horrendous
 ```
 
 ##Tracking down outliers
