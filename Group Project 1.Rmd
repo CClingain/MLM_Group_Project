@@ -388,7 +388,9 @@ school.sim <- rnorm(100,0,1) #no idea if this is the appraoch we should take??
 ##New Complex Model
 
 ```{r new complex model}
-newcomplex <-lmer(Math1st~housepov+mathknow+yearstea+mathprep+sex+minority+ses++(1+minority|schoolid)+(1|classid),data=classroom)
+classroom <- read.csv("data/classroom.csv")
+classroom2 <- na.omit(classroom)
+newcomplex <-lmer(Math1st~housepov+mathknow+yearstea+mathprep+sex+minority+ses+(minority|schoolid)+(1|classid),data=classroom2)
 ```
 
 ##Manually calculate residuals for fixed effects
