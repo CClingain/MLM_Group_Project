@@ -12,7 +12,7 @@ require(lme4)
 require(lattice)
 require(lmerTest)
 library(ggplot2); vanillaR <- F
-classroom <- read.csv("data/classroom.csv")
+classroom <- read.csv("classroom.csv")
 ```
 
 #Part 1
@@ -443,9 +443,10 @@ geom_boxplot()
 par(mfrow=c(2,2))
 plot(density(classroom2$zeta0c), main ="Normality Check for Zeta")
 plot(density(classroom2$eta0c), main = "Normality Check for Eta")
-#look pretty normal
-qqnorm(classroom2$zeta0c);qqline(classroom2$zeta0c)
-qqnorm(classroom2$eta0c);qqline(classroom2$eta0c)
+# eta looks pretty normal
+#zeta not so much
+qqnorm(classroom2$zeta0c, main = "Q-Q Plot for Zeta");qqline(classroom2$zeta0c)
+qqnorm(classroom2$eta0c, main = "Q-Q Plot for Eta");qqline(classroom2$eta0c)
 #eta looking good, but with a few possible outliers
 #zeta is horrendous
 ```
@@ -453,6 +454,48 @@ qqnorm(classroom2$eta0c);qqline(classroom2$eta0c)
 ##Tracking down outliers
 
 ```{r complex outliers}
+#look for schools more than +/- 2 sds (tails seem to be where outliers are)
+meanzeta0c <- mean(classroom2$zeta0c)
+sdzeta0c <- sd(classroom2$zeta0c)
+which(abs(classroom2$zeta0c)>abs((meanzeta0c+2*sdzeta0c)))
+#27 schools may be outliers
+```
 
+# Part 3
+
+## Create person-period file
+
+```{r person-period file}
+#re-read data
+classroom <- read.csv("classroom.csv")
+classroom2 <- na.omit(classroom)
+#new variables
+classroom2 <- classroom2 %>% mutate(math0 = mathkind) %>% mutate(math1 = mathkind+mathgain)
+#reshape the data
+class_pp <- reshape(classroom2, varying = c("math0", "math1"), v.names = "math", timevar = "year",
+times = c(0, 1), direction = "long")
+
+```
+
+## Initial longitudinal model
+
+The equation for the model below:
+
+$Math_{tijk} = b_0 + \zeta_{0k} + b_1*Time_{tijk} + \epsilon_{tijk}$
+where $\zeta_{0k} \sim N(0, \sigma_{zeta0}^2)$ and $\epsilon_{tijk} \sim N(0, \sigma_{\epsilon}^2)$
+
+```{r pp model1}
+fit1 <- lmer(math ~ year + (1|schoolid), data = class_pp)
+summary(fit1)
+```
+
+## Add child-level random intercept
+
+$Math_{tijk} = b_0 + \delta_{0tijk} + \zeta_{0k} + b_1*Time_{tijk} + \epsilon_{tijk}$
+where $\delta_{0tijk} \sim N(0, \sigma_{\delta_0}^2), \zeta_{0k} \sim N(0, \sigma_{zeta0}^2)$ and $\epsilon_{tijk} \sim N(0, \sigma_{\epsilon}^2)$
+
+```{r}
+fit2 <- lmer(math ~ year + (1|schoolid/childid), data = class_pp)
+summary(fit2)
 ```
 
