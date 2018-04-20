@@ -141,9 +141,16 @@ summary(rstc.3)
 rand(rstc.3)
 ```
 
+
+
 \textbf{Question:} Anything unusual about the variances? Why might this have occurred? (hint: what did you add to the model?)
 
-\textbf{Answer:} The random slope for mathknow greatly increases in the second model, which is probably due to its correlation with the random intercept at the school-level. 
+\textbf{Answer:} The random slope for mathknow greatly increases in the second model, which is probably due to its 
+correlation with the random intercept at the school-level. 
+
+B. note: Also -- weird that correlation among slope and intercept is prefectly -1. This looks like model is not fitting properly -- probably because some classrooms have very few observations so not all parameters are estimated. 
+
+
 
 ##Random slopes for student-level predictors varying at classroom level
 
@@ -219,6 +226,10 @@ rand(rssc.5) #sig
 rssc.6 <-lmer(Math1st~housepov+mathknow+yearstea+mathprep+sex+minority+ses+(1+ses|schoolid)+(1|classid),data=classroom)
 summary(rssc.6)
 rand(rssc.6) #not sig
+
+
+
+
 ```
 
 \textbf{Question:} Report unusual changes in variance.
@@ -475,13 +486,14 @@ classroom2 <- classroom2 %>% mutate(math0 = mathkind) %>% mutate(math1 = mathkin
 class_pp <- reshape(classroom2, varying = c("math0", "math1"), v.names = "math", timevar = "year",
 times = c(0, 1), direction = "long")
 
+
 ```
 
 ## Initial longitudinal model
 
 The equation for the model below:
 
-$Math_{tijk} = b_0 + \zeta_{0k} + b_1*Time_{tijk} + \epsilon_{tijk}$
+$$Math_{tijk} = b_0 + \zeta_{0k} + b_1*Time_{tijk} + \epsilon_{tijk}$$
 where $\zeta_{0k} \sim N(0, \sigma_{zeta0}^2)$ and $\epsilon_{tijk} \sim N(0, \sigma_{\epsilon}^2)$
 
 ```{r pp model1}
@@ -492,10 +504,78 @@ summary(fit1)
 ## Add child-level random intercept
 
 $Math_{tijk} = b_0 + \delta_{0tijk} + \zeta_{0k} + b_1*Time_{tijk} + \epsilon_{tijk}$
-where $\delta_{0tijk} \sim N(0, \sigma_{\delta_0}^2), \zeta_{0k} \sim N(0, \sigma_{zeta0}^2)$ and $\epsilon_{tijk} \sim N(0, \sigma_{\epsilon}^2)$
+where $\delta_{0tijk} \sim N(0, \sigma_{\delta_0}^2), \zeta_{0k} \sim N(0, \sigma_{zeta0}^2)$ and $\epsilon_{tijk} \sim N(0, \sigma_{\epsilon}^2)$ independetly of one another. 
 
-```{r}
+
+```{r pp model2}
 fit2 <- lmer(math ~ year + (1|schoolid/childid), data = class_pp)
 summary(fit2)
 ```
+
+In model 1 the variance $\sigma_{\zeta_0}^2 = 377$ and in model 2  $\sigma_{\zeta_0}^2 = 293.2$. 
+In model 1 , the varaince for $\sigma_{\epsilon}^2 = 1288$ and in model 2 $\sigma_{\epsilong_0}^2 = 602.2$. We note that including child-level variation leads to a decrease in the variance of both the random effects. 
+
+## Compute Pseudo-R^2
+
+Compute a pseudo R^2 relating the between school variation and ignoring between students in the same school. 
+
+We calculate this as :
+
+$$\frac{\sigma_{\zeta_0}^2(M_0) - \sigma_{\zeta_0}^2(M_1)}{\sigma_{\zeta_0}^2(M_0)} = \frac{377-293.2}{377} = 0.22$$
+The between-school variance is reduced by 22% with the introduction of student random effect?
+
+\textbf{Does the total variation stay about the same?}
+
+```{r pp mods totvariance}
+tot_m0 = 337 + 1288
+tot_m1 = 722 + 293.2 + 602.2 
+paste("Tot variance for model 0 : ", tot_m0)
+paste("Tot variance for model 1: ", tot_m1)
+
+```
+
+There is only a slightly decrease in the total variance between Model 0 and Model1. 
+
+## Add a random slope for time trend
+
+```{r pp mod3}
+fit3 = lmer(math ~ year + (1 + year|| schoolid) + (1|childid), data = class_pp)
+summary(fit3)
+```
+
+
+## Generate the BLUPs for this model (fit 3)
+Examine then whether the independence between zeta0 and zeta1 is reflected in a scatterplot of these two sets of effects. 
+
+***CHECK: is this what he is asking? i.e. check correlation between zeta0 and zeta1
+
+```{r pp blups}
+pp_ranefs <- ranef(fit3)
+
+
+
+
+if (vanillaR) {
+plot(pp_ranefs$schoolid[,2],pp_ranefs$schoolid[,1]) 
+}else{
+ggplot(pp_ranefs$schoolid, aes(x = pp_ranefs$schoolid[,2], y = pp_ranefs$schoolid[,1] )) +
+geom_point() + labs(x = "Zeta_{0k} BLOPs", y = "Zeta_{1k} BLOps") + geom_hline( yintercept = 0)
+}
+
+
+
+#cor(pp_ranefs$schoolid[,2], pp_ranefs$schoolid[,1])
+```
+
+Looks a bit like there is **some** negative correlation but not much?
+
+```{r}
+class_pp[class_pp$year == 1,]
+```
+
+## Heteroscedasticity in the random effects
+
+\textbf{Question:} What are: $V_S(year = 0)$, $V_S(year = 1)$?
+
+
 
