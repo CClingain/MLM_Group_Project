@@ -167,7 +167,7 @@ rand(rss.1)
 #SES
 rss.3 <-lmer(Math1st~housepov+mathknow+yearstea+mathprep+sex+minority+ses+(1+ses||classid)+(1|schoolid),data=classroom)
 summary(rss.3)
-rad(rss.3)
+rand(rss.3)
 ```
 
 \textbf{Question:} why is this a bad idea to include a classroom-level variable with random slopes at classroom-level? 
@@ -382,11 +382,11 @@ geom_boxplot()
 
 ```{r blups normality, fig.width=6, fig.height=4}
 par(mfrow=c(2,2))
-plot(density(classroom2$zeta0), main ="Normality Check for Zeta")
-plot(density(classroom2$eta0), main = "Normality Check for Eta")
+plot(density(zeta0), main ="Normality Check for Zeta")
+plot(density(eta0), main = "Normality Check for Eta")
 #looking strange
-qqnorm(classroom2$zeta0);qqline(classroom2$zeta0)
-qqnorm(classroom2$eta0);qqline(classroom2$eta0)
+qqnorm(zeta0);qqline(zeta0)
+qqnorm(eta0);qqline(eta0)
 #looking strange
 ```
 
@@ -452,24 +452,24 @@ geom_boxplot()
 
 ```{r complex blup normality}
 par(mfrow=c(2,2))
-plot(density(classroom2$zeta0c), main ="Normality Check for Zeta")
-plot(density(classroom2$eta0c), main = "Normality Check for Eta")
+plot(density(zeta0c), main ="Normality Check for Zeta")
+plot(density(eta0c), main = "Normality Check for Eta")
 # eta looks pretty normal
 #zeta not so much
-qqnorm(classroom2$zeta0c, main = "Q-Q Plot for Zeta");qqline(classroom2$zeta0c)
-qqnorm(classroom2$eta0c, main = "Q-Q Plot for Eta");qqline(classroom2$eta0c)
-#eta looking good, but with a few possible outliers
-#zeta is horrendous
+qqnorm(zeta0c, main = "Q-Q Plot for Zeta");qqline(zeta0c)
+qqnorm(eta0c, main = "Q-Q Plot for Eta");qqline(eta0c)
+#zeta looking good, but with a few possible outliers
+#eta is horrendous
 ```
 
 ##Tracking down outliers
 
 ```{r complex outliers}
 #look for schools more than +/- 2 sds (tails seem to be where outliers are)
-meanzeta0c <- mean(classroom2$zeta0c)
-sdzeta0c <- sd(classroom2$zeta0c)
-which(abs(classroom2$zeta0c)>abs((meanzeta0c+2*sdzeta0c)))
-#27 schools may be outliers
+meanzeta0c <- mean(zeta0c)
+sdzeta0c <- sd(zeta0c)
+which(abs(zeta0c)>abs((meanzeta0c+2*sdzeta0c)))
+#5 schools may be outliers
 ```
 
 # Part 3
