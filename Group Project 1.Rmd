@@ -668,3 +668,70 @@ So we have that (in this model where we are forcing correlation of 0 between slo
 -  $V_S(year = 1) = \sigma_{\zeta_{0k}}^2 + \sigma_{\zeta_{1k}}^2 + 2\rho_{01}\sigma_{\zeta_{0k}}\sigma_{\zeta_{1k}}= 373.5 + 112.4 - 2*0.53*\sqrt{373.5}\sqrt{112.4} = 268.7$
 
 These are a lot closer to the school variances that result from fitting the models for the two years separately ( in which we have $\sigma_{zeta}^2$ respectively be 364 for year 0 and 279 for year 1. 
+
+#Part 4: Kaushik
+
+## Reload the data and make person-period file
+
+```{r part4 person-period}
+#re-read data
+classroom <- read.csv("classroom.csv")
+classroom2 <- na.omit(classroom)
+#new variables
+classroom2 <- classroom2 %>% mutate(math0 = mathkind) %>% mutate(math1 = mathkind+mathgain)
+#reshape the data
+class_pp <- reshape(classroom2, varying = c("math0", "math1"), v.names = "math", timevar = "year",
+times = c(0, 1), direction = "long")
+```
+
+## Baseline model: unconditional growth model
+mixed math year || schoolid: year, cov(un) || childid:
+WRITE THE MODEL EQUATION
+
+```{r part4 UGM}
+
+```
+
+##  Add classroom and school level fixed effects
+WRITE THE MODEL EQUATION
+```{r part4 add class school}
+
+```
+
+## For year==0:
+*what percent of between school differences were explained as you go from the baseline to the second model?
+*what percent of between child differences were explained as you go from the baseline to the second model?
+
+## For year==1:
+*what percent of between school differences were explained as you go from the baseline to the second model?
+*what percent of between child differences were explained as you go from the baseline to the second model?
+
+## Based on significance, 
+*  what factors seem useful in describing ("explaining") differences between student outcomes? 
+*    Point out the direction of the effect.
+
+## Add random slope for SES
+
+```{r part4 rs ses}
+
+```
+
+## *is the estimated s.d. (square root of variance) of the random slope associated with SES large enough 
+*  so that a value +/- 1 s.d. is sufficient to "cancel" (or flip the sign) the fixed effect for this predictor?
+
+## Residuals and Q-Q Plot
+*Is there any reason to question the normality assumption?
+```{r part4 residuals}
+
+```
+
+## BLUPs for all 4 random effects & Scatter plots
+
+generate an all pairs scatter plot matrix (4x4) of these 
+* note whether or not you identify any concerns from these scatterplots.
+```{r part4 BLUPs}
+
+```
+
+
+
