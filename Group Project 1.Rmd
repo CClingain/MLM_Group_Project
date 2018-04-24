@@ -451,8 +451,8 @@ The residuals from the BLUPs random effects are calculated below. The boxplot of
 ```{r complex blup residuals}
 #getting predicted zeta_0 and eta_0
 ranefs2 <- ranef(newcomplex)
-zeta0c <- ranefs$schoolid[,1]
-eta0c <- ranefs$classid[,1]
+zeta0c <- ranefs2$schoolid[,1]
+eta0c <- ranefs2$classid[,1]
 zeta1c <- ranefs2$schoolid[,2]
 #indexing
 idx.sch <- match(classroom2$schoolid, sort(unique(classroom2$schoolid))) 
@@ -474,7 +474,7 @@ geom_boxplot()
 
 ##Examining Normality of BLUPs
 
-Below we examine the normality of $\zeta_0$ and $eta_0$. The density and Q-Q plots for both $zeta_0$ and $eta_0$ suggest normality, with a possibility of a few outliers near the tails. 
+Below we examine the normality of $\zeta_0$ and $eta_0$. The density and Q-Q plots for $eta_0$ suggest normality, with a possibility of a few outliers near the tails. The normality of $zeta_0$ is more questionable. The tails do not appear to fit a normal distribution.
 
 ```{r complex blup normality}
 par(mfrow=c(2,2))
@@ -484,7 +484,7 @@ plot(density(eta0c), main = "Normality Check for Eta")
 #zeta not so much
 qqnorm(zeta0c, main = "Q-Q Plot for Zeta");qqline(zeta0c)
 qqnorm(eta0c, main = "Q-Q Plot for Eta");qqline(eta0c)
-#zeta looking good, but with a few possible outliers
+#zeta looking iffy, but with a few possible outliers
 #eta good too, with few outliers. 
 ```
 
@@ -510,14 +510,16 @@ classroom2$zeta0c[classroom2$schoolid==68][[1]]/classroom2$zeta1c[classroom2$sch
 classroom2$zeta0c[classroom2$schoolid==30][[1]]/classroom2$zeta1c[classroom2$schoolid==30][[1]]
 
 #there seems to be a trend here that the zeta0/zeta1 ratio is > 3, so let's filter it out
-outliers <- classroom2 %>% filter(zeta0c/zeta1c > 3) %>% select(zeta0c,zeta1c,schoolid,minority)
+outliers <- classroom2 %>% filter(round(zeta0c/zeta1c,6)==1.868107) %>% select(zeta0c,zeta1c,schoolid,minority)
 #now let's make sure the IDs from the plot are showing up here
 unique(outliers$schoolid)
 #They are! Now what's going on with minority?
 table(outliers$minority)
+tapply(outliers$minority, INDEX = outliers$schoolid, FUN = sum)
+#The values match -- all students are minorities!
 ```
 
-It seems like the positive trend in the data is being driven by schools in which all the students are primarily minorities. 
+It seems like the positive trend in the data is being driven by schools in which all the students are minorities. 
 
 # Part 3: Bianca
 
