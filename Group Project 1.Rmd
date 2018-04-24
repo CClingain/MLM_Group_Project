@@ -15,7 +15,7 @@ library(ggplot2); vanillaR <- F
 classroom <- read.csv("classroom.csv")
 ```
 
-#Part 1
+#Part 1: Frankie
 
 ##Create 1st grade variable
 ```{r}
@@ -322,9 +322,11 @@ $V_S(ses= 0.50, minority= 0.50) = 404.54 + (0.50)^2*74.93 + (0.50)^2*336.04 + 2*
 
 \textbf{Answer:} 
 
-# Part 2
+# Part 2: Clare
 
 ##Running initial model
+
+The initial model was run on a smaller dataset with 1081 observations due to missing data. School-level and classroom-level random intercepts are included in the model.
 
 ```{r pt2 q1}
 #remove missing data -- not ideal, but have to do it for this analysis
@@ -335,9 +337,9 @@ new1 <-lmer(Math1st~housepov+mathknow+yearstea+mathprep+sex+minority+ses+(1|scho
 ```
 
 ##Residual that removes only the "fixed effects"
-*manually construct the residual that removes only the 'fixed effects'
-*hint: predict yhat, xb will generate the prediction for the outcome based on the fixed effects only
-* then subtract it from the outcome; call this residual: resFE
+
+Below we calculate the residuals that removes only the fixed effects. The boxplot of the residuals shows that there is great variation within schools and that there is a steady linear trend to the residuals, suggesting dependence. 
+
 ```{r pt2 q2}
 #predicted scores
 pred.yhat <- predict(new1,re.form=~0)
@@ -356,6 +358,8 @@ geom_boxplot()
 ```
 
 ##Residuals for BLUPs random effects
+
+The residuals for the BLUPs random effects are calculated below. The boxplot reveals a similar dependency to the previous plot, though not as pronounced. There doesn't seem to be as high a correlation as there is in the other residuals plot. 
 
 ```{r pt2 q3}
 #getting predicted zeta_0 and eta_0
@@ -381,32 +385,45 @@ geom_boxplot()
 
 ## Examining BLUPs for normality
 
+To examine the BLUPs for mormality, density plots and Q-Q plots were constructed. Both $zeta_0$ and $eta_0$ appear to be normal, with a few poossible outliers near the tails. 
+
 ```{r blups normality, fig.width=6, fig.height=4}
 par(mfrow=c(2,2))
 plot(density(zeta0), main ="Normality Check for Zeta")
 plot(density(eta0), main = "Normality Check for Eta")
-#looking strange
+#looking good
 qqnorm(zeta0);qqline(zeta0)
 qqnorm(eta0);qqline(eta0)
-#looking strange
+#looking good
 ```
 
 ##Simulation
 *if In a simpler setting, with no classroom level, if H0: \sigma^2_{\zeta_0}=0 were true, and you sampled 100 schools of size 10, what would be a potential expected estimate of \sigma_{\zeta_0} if you know that \sigma_{\epsilon}=1 ?  HINT: the Central Limit Theorem applies.  Simulate to find out.
 ```{r blups simulation}
-schools <- rep(10,100)
-school.sim <- rnorm(100,0,1) #no idea if this is the appraoch we should take??
+set.seed(10314)
+school.sim <- matrix(1,10,100)
+for (i in 1:100){
+school.sim[,i] <- rnorm(10,mean=0, sd=1)
+}
+plot(density(school.sim), main = "Density of Zeta0")
+paste("A potential estimate of sigma_{zeta_0}",mean(school.sim))
 ```
 
 ##New Complex Model
 
+We now include an uncorrelated random slope at the school-level for minority. 
+
 ```{r new complex model}
 classroom <- read.csv("classroom.csv")
+classroom <- classroom %>% mutate(Math1st = mathkind+mathgain)
 classroom2 <- na.omit(classroom)
 newcomplex <-lmer(Math1st~housepov+mathknow+yearstea+mathprep+sex+minority+ses+(minority|schoolid)+(1|classid),data=classroom2)
+summary(newcomplex)
 ```
 
 ##Manually calculate residuals for fixed effects
+
+In the new model, we see a similar pattern of dependency. There is a general positive, linear trend to the residuals, and there is heterogeneity of variance across and within schools. These findings all suggest dependence.
 
 ```{r complex resFE}
 #predicted scores
@@ -426,6 +443,8 @@ geom_boxplot()
 ```
 
 ##Residuals from BLUPs random effects
+
+The residuals from the BLUPs random effects are calculated below. The boxplot of the residuals appears to be only slightly correlated, partly due to the uptake near the final set of schools on the x-axis. Although the correlation of the residuals is probably near 0, there is still enough variation within schools, and enough of a correlation in the data to suggest dependence. 
 
 ```{r complex blup residuals}
 #getting predicted zeta_0 and eta_0
@@ -451,6 +470,8 @@ geom_boxplot()
 
 ##Examining Normality of BLUPs
 
+Below we examine the normality of $\zeta_0$ and $eta_0$. The density and Q-Q plots for both $zeta_0$ and $eta_0$ suggest normality, with a possibility of a few outliers near the tails. 
+
 ```{r complex blup normality}
 par(mfrow=c(2,2))
 plot(density(zeta0c), main ="Normality Check for Zeta")
@@ -460,20 +481,28 @@ plot(density(eta0c), main = "Normality Check for Eta")
 qqnorm(zeta0c, main = "Q-Q Plot for Zeta");qqline(zeta0c)
 qqnorm(eta0c, main = "Q-Q Plot for Eta");qqline(eta0c)
 #zeta looking good, but with a few possible outliers
-#eta is horrendous
+#eta good too, with few outliers. 
 ```
+
+## Plotting $\zeta_0$ versus $\zeta_1$
+
+The correlation between $\zeta_0$ and $zeta_1$ in the output is -0.83. The graph below suggests a moderate negative trend, but there are some outliers that do not support this trend. Rather, they seem to be positively related. 
+
+```{r plotting the zetas}
+plot(classroom2$zeta0c,classroom2$zeta1c, main = "Zeta0 vs. Zeta1", ylab = "Zeta1",xlab = "Zeta0", pch=19)
+ text(classroom2$zeta0c,classroom2$zeta1c, labels = classroom2$schoolid, cex = 0.8, col = 2)
+```
+
 
 ##Tracking down outliers
 
+The outliers from the plots above can be tracked down by examining the data points that are a part of the positive trend.
+
 ```{r complex outliers}
-#look for schools more than +/- 2 sds (tails seem to be where outliers are)
-meanzeta0c <- mean(zeta0c)
-sdzeta0c <- sd(zeta0c)
-which(abs(zeta0c)>abs((meanzeta0c+2*sdzeta0c)))
-#5 schools may be outliers
+
 ```
 
-# Part 3
+# Part 3: Bianca
 
 ## Create person-period file
 
@@ -486,8 +515,6 @@ classroom2 <- classroom2 %>% mutate(math0 = mathkind) %>% mutate(math1 = mathkin
 #reshape the data
 class_pp <- reshape(classroom2, varying = c("math0", "math1"), v.names = "math", timevar = "year",
 times = c(0, 1), direction = "long")
-
-
 ```
 
 ## Initial longitudinal model
