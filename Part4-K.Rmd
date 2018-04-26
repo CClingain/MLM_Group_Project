@@ -1,0 +1,80 @@
+---
+title: "MLM Project Part 4"
+author: "Bianca Brusco, Clare Clingain, Kaushik Mohan, & Frankie Wunschel"
+date: "4/26/2018"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+library(lme4)
+library(lattice)
+library(lmerTest)
+library(ggplot2)
+```
+
+#Part 4: Kaushik
+
+## Reload the data and make person-period file
+
+```{r part4 person-period}
+#re-read data
+classroom <- read.csv("classroom.csv")
+classroom2 <- na.omit(classroom)
+#new variables
+classroom2 <- classroom2 %>% mutate(math0 = mathkind) %>% mutate(math1 = mathkind+mathgain)
+#reshape the data
+class_pp <- reshape(classroom2, varying = c("math0", "math1"), v.names = "math", timevar = "year",
+times = c(0, 1), direction = "long")
+```
+
+## Baseline model: unconditional growth model
+mixed math year || schoolid: year, cov(un) || childid:
+WRITE THE MODEL EQUATION
+
+```{r part4 UGM}
+
+```
+
+##  Add classroom and school level fixed effects
+WRITE THE MODEL EQUATION
+```{r part4 add class school}
+
+```
+
+## For year==0:
+*what percent of between school differences were explained as you go from the baseline to the second model?
+*what percent of between child differences were explained as you go from the baseline to the second model?
+
+## For year==1:
+*what percent of between school differences were explained as you go from the baseline to the second model?
+*what percent of between child differences were explained as you go from the baseline to the second model?
+
+## Based on significance, 
+*  what factors seem useful in describing ("explaining") differences between student outcomes? 
+*    Point out the direction of the effect.
+
+## Add random slope for SES
+
+```{r part4 rs ses}
+
+```
+
+## *is the estimated s.d. (square root of variance) of the random slope associated with SES large enough 
+*  so that a value +/- 1 s.d. is sufficient to "cancel" (or flip the sign) the fixed effect for this predictor?
+
+## Residuals and Q-Q Plot
+*Is there any reason to question the normality assumption?
+```{r part4 residuals}
+
+```
+
+## BLUPs for all 4 random effects & Scatter plots
+
+generate an all pairs scatter plot matrix (4x4) of these 
+* note whether or not you identify any concerns from these scatterplots.
+```{r part4 BLUPs}
+
+```
+
