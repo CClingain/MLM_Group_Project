@@ -188,7 +188,7 @@ The correlation between $\zeta_0$ and $zeta_1$ in the output is -0.83. The graph
 
 ```{r plotting the zetas}
 plot(classroom2$zeta0c,classroom2$zeta1c, main = "Zeta0 vs. Zeta1", ylab = "Zeta1",xlab = "Zeta0", pch=19)
- text(classroom2$zeta0c,classroom2$zeta1c, labels = classroom2$schoolid, cex = 0.8, col = rainbow(100))
+ text(classroom2$zeta0c,classroom2$zeta1c, labels = classroom2$schoolid, cex = 0.8, col = rainbow(100), pos = 1)
 ```
 
 
