@@ -1,0 +1,167 @@
+---
+title: "Part3-B"
+author: "Bianca Brusco"
+date: "4/28/2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+require(lme4)
+require(lattice)
+require(lmerTest)
+library(ggplot2); vanillaR <- F
+classroom <- read.csv("classroom.csv")
+```
+
+
+# Part 3: Bianca
+
+## Create person-period file
+
+```{r person-period file}
+#re-read data
+classroom <- read.csv("classroom.csv")
+classroom2 <- na.omit(classroom)
+#new variables
+classroom2 <- classroom2 %>% mutate(math0 = mathkind) %>% mutate(math1 = mathkind+mathgain)
+#reshape the data
+class_pp <- reshape(classroom2, varying = c("math0", "math1"), v.names = "math", timevar = "year",
+times = c(0, 1), direction = "long")
+```
+
+## Initial longitudinal model
+
+The equation for the model below:
+
+$$Math_{tijk} = b_0 + \zeta_{0k} + b_1*Time_{tijk} + \epsilon_{tijk}$$
+where $\zeta_{0k} \sim N(0, \sigma_{zeta0}^2)$ and $\epsilon_{tijk} \sim N(0, \sigma_{\epsilon}^2)$
+
+```{r pp model1}
+fit1 <- lmer(math ~ year + (1|schoolid), data = class_pp)
+summary(fit1)
+```
+
+## Add child-level random intercept
+
+$Math_{tijk} = b_0 + \delta_{0tijk} + \zeta_{0k} + b_1*Time_{tijk} + \epsilon_{tijk}$
+where $\delta_{0tijk} \sim N(0, \sigma_{\delta_0}^2), \zeta_{0k} \sim N(0, \sigma_{zeta0}^2)$ and $\epsilon_{tijk} \sim N(0, \sigma_{\epsilon}^2)$ independetly of one another. 
+
+
+```{r pp model2}
+fit2 <- lmer(math ~ year + (1|schoolid/childid), data = class_pp)
+summary(fit2)
+```
+
+In model 1 the variance $\sigma_{\zeta_0}^2 = 377$ and in model 2  $\sigma_{\zeta_0}^2 = 293.2$. 
+In model 1 , the varaince for $\sigma_{\epsilon}^2 = 1288$ and in model 2 $\sigma_{\epsilon_0}^2 = 602.2$. We note that including child-level variation leads to a decrease in the variance of both the random effects. 
+
+## Compute Pseudo-R^2
+
+Compute a pseudo R^2 relating the between school variation and ignoring between students in the same school. 
+
+We calculate this as :
+
+$$\frac{\sigma_{\zeta_0}^2(M_0) - \sigma_{\zeta_0}^2(M_1)}{\sigma_{\zeta_0}^2(M_0)} = \frac{377-293.2}{377} = 0.22$$
+The between-school variance is reduced by 22% with the introduction of student random effect?
+
+\textbf{Does the total variation stay about the same?}
+
+```{r pp mods totvariance}
+tot_m0 = 337 + 1288
+tot_m1 = 722 + 293.2 + 602.2 
+paste("Tot variance for model 0 : ", tot_m0)
+paste("Tot variance for model 1: ", tot_m1)
+
+```
+
+There is only a slightly decrease in the total variance between Model 0 and Model1. 
+
+## Add a random slope for time trend
+
+```{r pp mod3}
+fit3 = lmer(math ~ year + (1 + year|| schoolid) + (1|childid), data = class_pp)
+summary(fit3)
+```
+
+
+## Generate the BLUPs for this model (fit 3)
+Examine then whether the independence between zeta0 and zeta1 is reflected in a scatterplot of these two sets of effects. 
+
+***CHECK: is this what he is asking? i.e. check correlation between zeta0 and zeta1
+
+```{r pp blups}
+pp_ranefs <- ranef(fit3)
+
+
+
+
+if (vanillaR) {
+plot(pp_ranefs$schoolid[,2],pp_ranefs$schoolid[,1]) 
+}else{
+ggplot(pp_ranefs$schoolid, aes(x = pp_ranefs$schoolid[,2], y = pp_ranefs$schoolid[,1] )) +
+geom_point() + labs(x = "Zeta_{0k} BLOPs", y = "Zeta_{1k} BLOps") + geom_hline( yintercept = 0)
+}
+
+
+
+#cor(pp_ranefs$schoolid[,2], pp_ranefs$schoolid[,1])
+```
+
+Looks a bit like there is **some** negative correlation but not much?
+
+## Heteroscedasticity in the random effects
+
+\textbf{Question:} What are: $V_S(year = 0)$, $V_S(year = 1)$?
+
+```{r}
+summary(fit3)
+```
+The model we are considering is           **(check subscripts pls)
+
+$Math_{tijk} = b_0 + \delta_{0tijk} + \zeta_{0k} + (b_1 + \zeta_{1k})Time_{tijk} + \epsilon_{tijk}$
+
+So we have that (in this model where we are forcing correlation of 0 between slope and intercept):
+
+-  $V_S(year = 0) = \sigma_{\zeta_{0k}}^2 = 85.96$
+-  $V_S(year = 1) = \sigma_{\zeta_{0k}}^2 + \sigma_{\zeta_{1k}}^2 = 85.96 + 315.69 = 401.65$
+
+## Run model by year
+
+```{r}
+class_year0 = class_pp[class_pp$year == 0,]
+
+
+
+fit4 = lmer(math ~ (1 | schoolid), data = class_year0)
+summary(fit4)
+
+
+class_year1 = class_pp[class_pp$year == 1,]
+fit5 = lmer(math ~ (1 | schoolid), data = class_year1)
+summary(fit5)
+
+
+
+```
+
+No, we do no ge the same estimates for the variances by running the model separately. 
+
+## Allow for correlation 
+
+```{r}
+fit6 = lmer(math ~ year + (1 + year| schoolid) + (1|childid), data = class_pp)
+summary(fit6)
+
+```
+
+Correlation beteween $\zeta_0$ and $\zeta_1$ = -0.53. 
+Statistically significant?
+
+So we have that (in this model where we are forcing correlation of 0 between slope and intercept):
+
+-  $V_S(year = 0) = \sigma_{\zeta_{0k}}^2 = 373.5$
+-  $V_S(year = 1) = \sigma_{\zeta_{0k}}^2 + \sigma_{\zeta_{1k}}^2 + 2\rho_{01}\sigma_{\zeta_{0k}}\sigma_{\zeta_{1k}}= 373.5 + 112.4 - 2*0.53*\sqrt{373.5}\sqrt{112.4} = 268.7$
+
+These are a lot closer to the school variances that result from fitting the models for the two years separately ( in which we have $\sigma_{zeta}^2$ respectively be 364 for year 0 and 279 for year 1. 
