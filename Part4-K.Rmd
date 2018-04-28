@@ -31,23 +31,23 @@ times = c(0, 1), direction = "long")
 
 ## Baseline model: unconditional growth model
 
-$$MATH_{tijk} = b_0 + \delta_{0ijk} + b_1TIME_{tijk} + \zeta_{0k} + \epsilon_{tijk} $$
+$$MATH_{tijk} = b_0 + \delta_{0ijk} + (b_1 + \zeta_{1k} )TIME_{tijk} + \zeta_{0k} + \epsilon_{tijk} $$
 
-where $t$ represents occasion (in this case, year/grade), $i$ represents students, $j$ represents classrooms and $k$ represents schools. $\delta_{0ijk} \sim N(0,\sigma^2_{\delta_0})$, $\zeta_{0k} \sim N(0,\sigma^2_{\zeta_0})$ and $\epsilon_{ijk} \sim N(0,\sigma^2_{\epsilon})$ independent of each other. 
+where $t$ represents occasion (in this case, year/grade), $i$ represents students, $j$ represents classrooms and $k$ represents schools. $\delta_{0ijk} \sim N(0,\sigma^2_{\delta_0})$, $\zeta_{0k} \sim N(0,\sigma^2_{\zeta_0})$, $\zeta_{1k} \sim N(0,\sigma^2_{\zeta_1})$ and $\epsilon_{ijk} \sim N(0,\sigma^2_{\epsilon})$ all independent of each other except for $\zeta_{0k}$ and $\zeta_{1k}$ having a correlation $\rho_{\zeta_{0}\zeta_{1}}$.
 
 ```{r part4 UGM}
-ugm <- lmer(math ~ year + (1 | schoolid/childid), data=class_pp)
+ugm <- lmer(math ~ year + (year|schoolid) + (1|classid:childid), data=class_pp)
 summary(ugm)
 
 ```
 
 ##  Add student, classroom and school level fixed effects
-$$MATH_{tijk} = b_0 + \delta_{0ijk} + b_1TIME_{tijk} + b_2SEX_{ijk} + b_3SES_{ijk} + b_4MINORITY_{ijk} + b_5YEARSTEA_{jk} + \\ b_6MATHKNOW_{jk} + b_7MATHPREP_{jk} + b_8HOUSEPOV_{k} + \epsilon_{tijk} $$
+$$MATH_{tijk} = b_0 + \delta_{0ijk} + (b_1 + \zeta_{1k} )TIME_{tijk} + b_2SEX_{ijk} + b_3SES_{ijk} + b_4MINORITY_{ijk} + b_5YEARSTEA_{jk} + \\ b_6MATHKNOW_{jk} + b_7MATHPREP_{jk} + b_8HOUSEPOV_{k} + \epsilon_{tijk} $$
 
-where $t$ represents occasion (in this case, year/grade), $i$ represents students, $j$ represents classrooms and $k$ represents schools. $\delta_{0ijk} \sim N(0,\sigma^2_{\delta_0})$ and $\epsilon_{ijk} \sim N(0,\sigma^2_{\epsilon})$ independent of each other. 
+where $t$ represents occasion (in this case, year/grade), $i$ represents students, $j$ represents classrooms and $k$ represents schools. $\delta_{0ijk} \sim N(0,\sigma^2_{\delta_0})$, $\zeta_{0k} \sim N(0,\sigma^2_{\zeta_0})$, $\zeta_{1k} \sim N(0,\sigma^2_{\zeta_1})$ and $\epsilon_{ijk} \sim N(0,\sigma^2_{\epsilon})$ all independent of each other except for $\zeta_{0k}$ and $\zeta_{1k}$ having a correlation $\rho_{\zeta_{0}\zeta_{1}}$.
 
 ```{r part4 add class school}
-fit2 <- lmer(math ~ year + sex + ses + minority + yearstea + mathknow + mathprep + housepov + (1 | schoolid/childid), data=class_pp)
+fit2 <- lmer(math ~ year + sex + ses + minority + yearstea + mathknow + mathprep + housepov + (year|schoolid) + (1|classid:childid), data=class_pp)
 summary(fit2)
 
 ```
