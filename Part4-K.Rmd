@@ -12,6 +12,7 @@ library(lme4)
 library(lattice)
 library(lmerTest)
 library(ggplot2)
+library(sm)
 ```
 
 #Part 4: Kaushik
@@ -36,54 +37,134 @@ $$MATH_{tijk} = b_0 + \delta_{0ijk} + (b_1 + \zeta_{1k} )TIME_{tijk} + \zeta_{0k
 where $t$ represents occasion (in this case, year/grade), $i$ represents students, $j$ represents classrooms and $k$ represents schools. $\delta_{0ijk} \sim N(0,\sigma^2_{\delta_0})$, $\zeta_{0k} \sim N(0,\sigma^2_{\zeta_0})$, $\zeta_{1k} \sim N(0,\sigma^2_{\zeta_1})$ and $\epsilon_{ijk} \sim N(0,\sigma^2_{\epsilon})$ all independent of each other except for $\zeta_{0k}$ and $\zeta_{1k}$ having a correlation $\rho_{\zeta_{0}\zeta_{1}}$.
 
 ```{r part4 UGM}
-ugm <- lmer(math ~ year + (year|schoolid) + (1|classid:childid), data=class_pp)
+ugm <- lmer(math ~ year + (year|schoolid) + (1|childid), data=class_pp)
 summary(ugm)
 
 ```
 
 ##  Add student, classroom and school level fixed effects
-$$MATH_{tijk} = b_0 + \delta_{0ijk} + (b_1 + \zeta_{1k} )TIME_{tijk} + b_2SEX_{ijk} + b_3SES_{ijk} + b_4MINORITY_{ijk} + b_5YEARSTEA_{jk} + \\ b_6MATHKNOW_{jk} + b_7MATHPREP_{jk} + b_8HOUSEPOV_{k} + \epsilon_{tijk} $$
+$$MATH_{tijk} = b_0 + \delta_{0ijk} + (b_1 + \zeta_{1k} )TIME_{tijk} + b_2SEX_{ijk} + b_3SES_{ijk} + b_4MINORITY_{ijk} + b_5YEARSTEA_{jk} + \\ b_6MATHKNOW_{jk} + b_7MATHPREP_{jk} + b_8HOUSEPOV_{k} + \zeta_{0k} + \epsilon_{tijk} $$
 
 where $t$ represents occasion (in this case, year/grade), $i$ represents students, $j$ represents classrooms and $k$ represents schools. $\delta_{0ijk} \sim N(0,\sigma^2_{\delta_0})$, $\zeta_{0k} \sim N(0,\sigma^2_{\zeta_0})$, $\zeta_{1k} \sim N(0,\sigma^2_{\zeta_1})$ and $\epsilon_{ijk} \sim N(0,\sigma^2_{\epsilon})$ all independent of each other except for $\zeta_{0k}$ and $\zeta_{1k}$ having a correlation $\rho_{\zeta_{0}\zeta_{1}}$.
 
 ```{r part4 add class school}
-fit2 <- lmer(math ~ year + sex + ses + minority + yearstea + mathknow + mathprep + housepov + (year|schoolid) + (1|classid:childid), data=class_pp)
+fit2 <- lmer(math ~ year + sex + ses + minority + yearstea + mathknow + mathprep + housepov + (year|schoolid) + (1|childid), data=class_pp)
 summary(fit2)
 
 ```
 
 ## For year==0:
 *what percent of between school differences were explained as you go from the baseline to the second model?
+
+For the baseline model:
+$$V_{1BS} = \sigma^2_{\zeta_0} + 2*year*\rho_{\zeta_0 \zeta_1}\sigma_{\zeta_0}\sigma_{\zeta_1} + year^2*\sigma^2_{\zeta_1}$$
+
+$$V_{1BS}(year=0) = \sigma^2_{\zeta_0} = 373.5 $$
+
+After adding fixed-effects:
+$$V_{2BS} = \sigma^2_{\zeta_0} + 2*year*\rho_{\zeta_0 \zeta_1}\sigma_{\zeta_0}\sigma_{\zeta_1} + year^2*\sigma^2_{\zeta_1}$$
+$$V_{2BS}(year=0) = \sigma^2_{\zeta_0} = 249.2 $$
+
+The percent difference in between-school variance for $year=0$ is be given by:
+$$ \frac{V_{1BS} - V_{2BS}}{V_{1BS}} = \frac{373.5-249.2}{373.5} = 33.28\% $$
+Model 2 explains $33.28\%$ of the between-school variance for $year=0$.
+
 *what percent of between child differences were explained as you go from the baseline to the second model?
+
+For the baseline model:
+$$V_{1BC}(year=0) = \sigma^2_{\delta_0} = 749.0$$
+
+After adding fixed effects:
+$$V_{2BC}(year=0) = \sigma^2_{\delta_0} = 689.5$$
+
+The percent difference in between-child variance explained by the second model for $year=0$ is given by:
+$$ \frac{V_{1BC} - V_{2BC}}{V_{1BC}} = \frac{749.0-689.5}{749.0} = 7.94\% $$
+Model 2 explains $7.94\%$ of the between-child variance for $year=0$.
 
 ## For year==1:
 *what percent of between school differences were explained as you go from the baseline to the second model?
+
+For the baseline model:
+$$V_{1BS} = \sigma^2_{\zeta_0} + 2*year*\rho_{\zeta_0 \zeta_1}\sigma_{\zeta_0}\sigma_{\zeta_1} + year^2*\sigma^2_{\zeta_1}$$
+
+$$V_{1BS}(year=1) = 373.5 + 2(-0.53)(19.33)(10.60) + 112.4 = 268.71$$
+
+After adding fixed-effects:
+$$V_{2BS} = \sigma^2_{\zeta_0} + 2*year*\rho_{\zeta_0 \zeta_1}\sigma_{\zeta_0}\sigma_{\zeta_1} + year^2*\sigma^2_{\zeta_1}$$
+$$V_{2BS}(year=1) =  249.2 + 2(-0.53)(15.79)(10.69) + 114.2 = 184.48$$
+
+The percent difference in between-school variance for $year=0$ is be given by:
+$$ \frac{V_{1BS} - V_{2BS}}{V_{1BS}} = \frac{268.71-184.48}{268.71} = 31.35\% $$
+Model 2 explains $31.35\%$ of the between-school variance for $year=1$.
+
 *what percent of between child differences were explained as you go from the baseline to the second model?
+
+For the baseline model:
+$$V_{1BC}(year=1) = \sigma^2_{\delta_0} = 749.0$$
+
+After adding fixed effects:
+$$V_{2BC}(year=1) = \sigma^2_{\delta_0} = 689.5$$
+
+The percent difference in between-child variance explained by the second model for $year=1$ is given by:
+$$ \frac{V_{1BC} - V_{2BC}}{V_{1BC}} = \frac{749.0-689.5}{749.0} = 7.94\% $$
+Model 2 explains $7.94\%$ of the between-child variance for $year=1$.
 
 ## Based on significance, 
 *  what factors seem useful in describing ("explaining") differences between student outcomes? 
-*    Point out the direction of the effect.
+*  Point out the direction of the effect.
+
+$SES$ and $MINORITY$ status are the significant fixed-effects terms in the model at $\alpha=0.05$ implying that these terms (being in Level 1) help to explain the between-student variance conditional on the school. 
+
+The coefficient on $SES$ is positive meaning that two students in the same school and student-level random effect and all else equal, the one with the higher $SES$ has a higher Math score.
+
+The coefficient on $MINORITY$ status is negative meaning that two students in the same school and student-level random effect and all else equal, the one who is classified as a Minority student has a lower Math score.
 
 ## Add random slope for SES
 
+$$MATH_{tijk} = b_0 + \delta_{0ijk} + (b_1 + \zeta_{1k} )TIME_{tijk} + b_2SEX_{ijk} + (b_3+\zeta_{3k})SES_{ijk} + b_4MINORITY_{ijk} + b_5YEARSTEA_{jk} + \\ b_6MATHKNOW_{jk} + b_7MATHPREP_{jk} + b_8HOUSEPOV_{k} + \epsilon_{tijk} $$
+
+where $t$ represents occasion (in this case, year/grade), $i$ represents students, $j$ represents classrooms and $k$ represents schools. $\delta_{0ijk} \sim N(0,\sigma^2_{\delta_0})$, $\zeta_{0k} \sim N(0,\sigma^2_{\zeta_0})$, $\zeta_{1k} \sim N(0,\sigma^2_{\zeta_1})$, $\zeta_{3k} \sim N(0,\sigma^2_{\zeta_3})$ and $\epsilon_{ijk} \sim N(0,\sigma^2_{\epsilon})$ all independent of each other except for $\zeta_{0k}$,  $\zeta_{1k}$ and $\zeta_{3k}$ could be correlated.
+
 ```{r part4 rs ses}
+fit3 <- lmer(math ~ year + sex + ses + minority + yearstea + mathknow + mathprep + housepov + (ses+year|schoolid) + (1|childid), data=class_pp)
+summary(fit3)
 
 ```
 
 ## *is the estimated s.d. (square root of variance) of the random slope associated with SES large enough 
 *  so that a value +/- 1 s.d. is sufficient to "cancel" (or flip the sign) the fixed effect for this predictor?
 
+The estimated standard deviation of the random slope associated with SES is $6.818$. We note that this is not large enough to "cancel" or flip the sign of the fixed-effect on SES within $+/- 1$ standard deviation. 
+
+The majority of the values (middle $68\%$ ) for the fixed effect on SES is within the range $[(9.32191 - 6.818),(9.32191 - 6.818)] = [2.50391,16.13991]$
+
+
 ## Residuals and Q-Q Plot
+*compute residuals in this final model.  generate a qq plot and density (STATA: qnorm; kdensity ..., normal) 
 *Is there any reason to question the normality assumption?
 ```{r part4 residuals}
-
+fit3.residuals <- residuals(fit3)
+sm.density(fit3.residuals,model="Normal",xlab="Residuals")
+qqnorm(y=fit3.residuals)
+qqline(y=fit3.residuals,col=2)
 ```
+
+The residuals seem to have slightly heavier tails compared to a standard normal distribution. From the density plot, we also note that given the sample size, the peak is slightly higher than expected for a normal distribution. The distribution of residuals does not fall within the expected range given by the blue region although the deviation is minimal. Within a range of 4-sd (between +/- 2 sd), the Residual quantiles are seen to be linear compared to the Theoretical quantiles implying that the residuals are indeed quite normally distributed for the most part. 
 
 ## BLUPs for all 4 random effects & Scatter plots
 
 generate an all pairs scatter plot matrix (4x4) of these 
 * note whether or not you identify any concerns from these scatterplots.
 ```{r part4 BLUPs}
+ranefs <- ranef(fit3)
+Delta0 <- ranefs$childid
+idx.school <- match(classroom2$schoolid, sort(unique(classroom2$schoolid))) 
+Zeta0 <- ranefs$schoolid[idx.school,1]
+Zeta1 <- ranefs$schoolid[idx.school,2]
+Zeta2 <- ranefs$schoolid[idx.school,3]
 
+ranefs <- data.frame(delta0=Delta0,zeta0=Zeta0,zeta1=Zeta1,zeta2=Zeta2)
+colnames(ranefs) <- c("Delta0","Zeta0","Zeta1","Zeta2")
+pairs(ranefs,cex=0.5)
 ```
 
