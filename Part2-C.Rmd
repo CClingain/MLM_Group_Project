@@ -25,7 +25,8 @@ The initial model was run on a smaller dataset with 1081 observations due to mis
 classroom <- classroom %>% mutate(Math1st = mathkind + mathgain)
 classroom2 <- na.omit(classroom)
 #model
-new1 <-lmer(Math1st~housepov+mathknow+yearstea+mathprep+sex+minority+ses+(1|schoolid)+(1|classid),data=classroom2)
+new1 <-lmer(Math1st~housepov+mathknow+yearstea+mathprep+sex
+            +minority+ses+(1|schoolid)+(1|classid),data=classroom2)
 ```
 
 ##Residual that removes only the "fixed effects"
@@ -111,7 +112,8 @@ We now include an uncorrelated random slope at the school-level for minority.
 classroom <- read.csv("classroom.csv")
 classroom <- classroom %>% mutate(Math1st = mathkind+mathgain)
 classroom2 <- na.omit(classroom)
-newcomplex <-lmer(Math1st~housepov+mathknow+yearstea+mathprep+sex+minority+ses+(minority|schoolid)+(1|classid),data=classroom2)
+newcomplex <-lmer(Math1st~housepov+mathknow+yearstea+mathprep+sex+minority+ses+
+                    (minority|schoolid)+(1|classid),data=classroom2)
 summary(newcomplex)
 ```
 
@@ -166,7 +168,7 @@ geom_boxplot()
 
 ##Examining Normality of BLUPs
 
-Below we examine the normality of $\zeta_0$ and $eta_0$. The density and Q-Q plots for $eta_0$ suggest normality, with a possibility of a few outliers near the tails. The normality of $zeta_0$ is more questionable. The tails do not appear to fit a normal distribution.
+Below we examine the normality of $\zeta_0$ and $\eta_0$. The density and Q-Q plots for $\eta_0$ suggest normality, with a possibility of a few outliers near the tails. The normality of $\zeta_0$ is more questionable. The tails do not appear to fit a normal distribution.
 
 ```{r complex blup normality}
 par(mfrow=c(2,2))
@@ -182,13 +184,15 @@ qqnorm(eta0c, main = "Q-Q Plot for Eta");qqline(eta0c)
 
 ## Plotting $\zeta_0$ versus $\zeta_1$
 
-The correlation between $\zeta_0$ and $zeta_1$ in the output is -0.83. The graph below suggests a moderate negative trend, but there are some outliers that do not support this trend. Rather, they seem to be positively related. 
+The correlation between $\zeta_0$ and $\zeta_1$ in the output is -0.83. The graph below suggests a moderate negative trend, but there are some outliers that do not support this trend. Rather, they seem to be positively related. 
 
 *Note: the labels were put in rainbow in order to better discern their locations.
 
 ```{r plotting the zetas}
-plot(classroom2$zeta0c,classroom2$zeta1c, main = "Zeta0 vs. Zeta1", ylab = "Zeta1",xlab = "Zeta0", pch=19)
- text(classroom2$zeta0c,classroom2$zeta1c, labels = classroom2$schoolid, cex = 0.8, col = rainbow(100), pos = 1)
+plot(classroom2$zeta0c,classroom2$zeta1c, main = "Zeta0 vs. Zeta1", 
+     ylab = "Zeta1",xlab = "Zeta0", pch=19)
+ text(classroom2$zeta0c,classroom2$zeta1c, labels = classroom2$schoolid,
+      cex = 0.8, col = rainbow(100), pos = 1)
 ```
 
 
