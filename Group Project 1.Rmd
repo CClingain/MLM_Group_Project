@@ -1,3 +1,8 @@
+---
+output:
+  pdf_document: default
+  html_document: default
+---
 --
 title: 'Group Project #1'
 author: "Bianca Brusco, Clare Clingain, Kaushik Mohan, & Frankie Wunschel"
@@ -334,9 +339,9 @@ summary(model4)
 
 \textbf{Question:} By what fraction did these each decrease with the new predictors in the model?
 
-\textbf{Answer:} $V_C$ increased  \frac{93.89}{85.46}
-                  $V_S$ decreased  \frac{169.45}{280.68}
-                  $V_E$ decreased \frac{1064.95}{1146.80}
+\textbf{Answer:} $V_C$ increased  $\frac{93.89}{85.46}$
+                  $V_S$ decreased  $\frac{169.45}{280.68}$
+                  $V_E$ decreased $\frac{1064.95}{1146.80}$
 
 ```{r}
 summary(rss.6)
@@ -388,18 +393,18 @@ $V_S(ses= 0.50, minority= 0.50) = 404.54 + (0.50)^274.93 + (0.50)^2336.04 + 20.5
 summary(complex)
 ```
 
-\textbf{Question:} In the last model, what is a "likely" (+/- 1 sd) range for \eta_{0jk}
+\textbf{Question:} In the last model, what is a "likely" (+/- 1 sd) range for $\eta_{0jk}$
 
-\textbf{Answer:} For the complex model, the "likely" range for \eta{0jk} is 71.651 to 89.609.
+\textbf{Answer:} For the complex model, the "likely" range for $\eta{0jk}$ is 71.651 to 89.609.
 
-\textbf{Question:} Can we make a similar statement about \zeta_{0k}?
+\textbf{Question:} Can we make a similar statement about $\zeta_{0k}$?
 
 \textbf{Answer:} Mathmatically we can with a range of 384.427 to 424.653 though we can do this it doesn't make much sense due to the correlated nature of this with the minority variable the values wouldn't hold much meaning and are easily mis interpretted
 
-\textbf{Question:} If you had a large value for \eta_{0jk}, would you expect a large or small or "any" value for: the two random slope terms, \zeta_{1k} and \zeta_{2k} for ses and minority?
+\textbf{Question:} If you had a large value for $\eta_{0jk}$, would you expect a large or small or "any" value for: the two random slope terms, $\zeta_{1k}$ and $\zeta_{2k}$ for ses and minority?
 
-\textbf{Answer:} If you have a very large \eta_{0jk} you would expect a small value for \zeta_{1k} and \zeta_{2k} but the \zeta_{2k} would not be as small due to its negative correlation with our \zeta_{0k} which is effected by our eta value
+\textbf{Answer:} If you have a very large $\eta_{0jk}$ you would expect a small value for $\zeta_{1k}$ and $\zeta_{2k}$ but the $\zeta_{2k}$ would not be as small due to its negative correlation with our $\zeta_{0k}$ which is effected by our eta value
 
-\textbf{Question:} If you had a large value for \zeta_{0k}, would you expect a large or small or "any" value for: the two random slope terms, \zeta_{1k} and \zeta_{2k} for ses and minority (discuss each separately)?
+\textbf{Question:} If you had a large value for $\zeta_{0k}$, would you expect a large or small or "any" value for: the two random slope terms, $\zeta_{1k}$ and $\zeta_{2k}$ for ses and minority (discuss each separately)?
 
-\textbf{Answer:} For \zeta_{1k} would increase in the same direction but it could be any value due to the lack of correlation, keeping in mind that \zeta_{0k} will create a cieling effect of sorts for \zeta_{1k} . While \zeta_{2k} would be very small because of the correlation because of the two variables are negatively correlated
+\textbf{Answer:} For $\zeta_{1k}$ would increase in the same direction but it could be any value due to the lack of correlation, keeping in mind that $\zeta_{0k}$ will create a cieling effect of sorts for $\zeta_{1k}$ . While $\zeta_{2k}$ would be very small because of the correlation because of the two variables are negatively correlated
