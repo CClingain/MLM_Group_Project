@@ -2,7 +2,9 @@
 title: "Part3-B"
 author: "Bianca Brusco"
 date: "4/28/2018"
-output: html_document
+output:
+  pdf_document: default
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -68,8 +70,8 @@ fit2 <- lmer(math ~ year + (1|schoolid/childid), data = class_pp)
 summary(fit2)
 ```
 
-In model 1 the variance $\sigma_{\zeta_0}^2 = 377$ and in model 2  $\sigma_{\zeta_0}^2 = 293.2$.  
-In model 1 , the varaince for $\sigma_{\epsilon}^2 = 1288$ and in model 2 $\sigma_{\epsilon_0}^2 = 602.2$. We note that including child-level variation leads to a decrease in the variance of both the random effects. 
+In model 0 the variance $\sigma_{\zeta_0}^2 = 377$ and in model 1  $\sigma_{\zeta_0}^2 = 293.2$.  
+In model 0 , the varaince for $\sigma_{\epsilon}^2 = 1288$ and in model 1 $\sigma_{\epsilon_0}^2 = 602.2$. We note that including child-level variation leads to a decrease in the variance of both the random effects. 
 
 ## Compute Pseudo-R^2
 
