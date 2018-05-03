@@ -106,7 +106,7 @@ paste("A potential estimate of sigma_{zeta_0} is ",mean(school.sim))
 
 ##New Complex Model
 
-We now include an uncorrelated random slope at the school-level for minority. 
+We now include a correlated random slope at the school-level for minority. 
 
 ```{r new complex model}
 classroom <- read.csv("classroom.csv")
@@ -215,4 +215,4 @@ tapply(outliers$minority, INDEX = outliers$schoolid, FUN = sum)
 #The values match -- all students are minorities!
 ```
 
-It seems like the positive trend in the data is being driven by schools in which all the students are minorities. 
+It seems like the (perfectly) positive trend in the data is being driven by schools in which all the students are minorities. That is, in schools in which there are only minority students, all other factors held equal, there is a boost in math scores in 1st grade for minority students. In a way, being in a totally minority school is a "protective" factor for minority students. 
