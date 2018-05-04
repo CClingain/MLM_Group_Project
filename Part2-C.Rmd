@@ -97,11 +97,14 @@ Below is a simulation based on the H0 being true, and a $\sigma_{\epsilon} = 1$.
 ```{r blups simulation}
 set.seed(10314)
 school.sim <- matrix(1,10,100)
+means <- NULL
 for (i in 1:100){
 school.sim[,i] <- rnorm(10,mean=0, sd=1)
+means[i] <- mean(school.sim[,i])
 }
-plot(density(school.sim), main = "Density of Zeta0")
-paste("A potential estimate of sigma_{zeta_0} is ",mean(school.sim))
+plot(density(means), main = "Density of Zeta0")
+#we see the density is concentrated around 0
+paste("A potential estimate of sigma_{zeta_0} is ",mean(means))
 ```
 
 ##New Complex Model
