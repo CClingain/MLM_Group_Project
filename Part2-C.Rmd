@@ -1,7 +1,6 @@
 ---
-title: "Group Project 2"
-author: "Clare Clingain"
-date: "April 26, 2018"
+title: "MLM Project Part 2"
+author: "Bianca Brusco, Clare Clingain, Kaushik Mohan, & Frankie Wunschel"
 output: pdf_document
 ---
 
