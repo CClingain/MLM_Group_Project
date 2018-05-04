@@ -340,7 +340,9 @@ summary(model4)
 \textbf{Question:} By what fraction did these each decrease with the new predictors in the model?
 
 \textbf{Answer:} $V_C$ increased  $\frac{93.89}{85.46}$
+
                   $V_S$ decreased  $\frac{169.45}{280.68}$
+                  
                   $V_E$ decreased $\frac{1064.95}{1146.80}$
 
 ```{r}
@@ -399,7 +401,7 @@ summary(complex)
 
 \textbf{Question:} Can we make a similar statement about $\zeta_{0k}$?
 
-\textbf{Answer:} Mathmatically we can with a range of 384.427 to 424.653 though we can do this it doesn't make much sense due to the correlated nature of this with the minority variable the values wouldn't hold much meaning and are easily mis interpretted
+\textbf{Answer:} Mathmatically we can with a range of 384.427 to 424.653 though we can do this it doesn't make much sense due to the correlated nature of this with the minority variable the values wouldn't hold much meaning and are easily misinterpreted.
 
 \textbf{Question:} If you had a large value for $\eta_{0jk}$, would you expect a large or small or "any" value for: the two random slope terms, $\zeta_{1k}$ and $\zeta_{2k}$ for ses and minority?
 
@@ -407,4 +409,4 @@ summary(complex)
 
 \textbf{Question:} If you had a large value for $\zeta_{0k}$, would you expect a large or small or "any" value for: the two random slope terms, $\zeta_{1k}$ and $\zeta_{2k}$ for ses and minority (discuss each separately)?
 
-\textbf{Answer:} For $\zeta_{1k}$ would increase in the same direction but it could be any value due to the lack of correlation, keeping in mind that $\zeta_{0k}$ will create a cieling effect of sorts for $\zeta_{1k}$ . While $\zeta_{2k}$ would be very small because of the correlation because of the two variables are negatively correlated
+\textbf{Answer:} For $\zeta_{1k}$ would increase in the same direction but it could be any value due to the lack of correlation, keeping in mind that $\zeta_{0k}$ will create a ceiling effect of sorts for $\zeta_{1k}$ . While $\zeta_{2k}$ would be very small because of the correlation because of the two variables are negatively correlated.
