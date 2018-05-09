@@ -19,6 +19,8 @@ library(sm)
 
 ## Reload the data and make person-period file
 
+A reduced dataset was used for this analysis since there is missing data for one of the variables of interest. We acknowledge that this is not ideal in practice.
+
 ```{r part4 person-period}
 #re-read data
 classroom <- read.csv("classroom.csv")
