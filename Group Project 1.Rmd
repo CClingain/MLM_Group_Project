@@ -122,6 +122,7 @@ rst.1 <-lmer(Math1~housepov+mathknow+yearstea+mathprep+sex+minority+ses+(1+mathk
 summary(rst.1)
 ranova(rst.1,refit=F)
 ```
+
 There is not a need for the random slope for math knowledge at a school level as the p value is not signifcant at .999
 
 ```{r}
@@ -129,7 +130,6 @@ rst.2 <-lmer(Math1~housepov+mathknow+yearstea+mathprep+sex+minority+ses+(1+years
 summary(rst.2)
 ranova(rst.2, refit=F)
 ```
-
 
 There seems to be no need for for the random slope for years teaching at a school level as the p value is insignificant at .933
 
@@ -154,7 +154,7 @@ summary(rstc.1)
 ranova(rstc.1, refit=F)
 ```
 
-The correlated math knowledge is insignificant and seems to add no value to the model
+The correlated math knowledge is insignificant and seems to add no value to the model.
 
 #yearstea
 ```{r}
@@ -162,7 +162,8 @@ rstc.2 <-lmer(Math1~housepov+mathknow+yearstea+mathprep+sex+minority+ses+(1+year
 summary(rstc.2)
 ranova(rstc.2,refit=F) 
 ```
-This correlated random slope for years teaching is right on the cusp of signicance and should be observed further in attempts to understand its need for adding it to the model it has a p value of .0543
+
+This correlated random slope for years teaching is right on the cusp of signicance and should be observed further in attempts to understand its need for adding it to the model it has a p value of .0543.
 
 #mathprep
 ```{r}
@@ -170,15 +171,14 @@ rstc.3 <-lmer(Math1~housepov+mathknow+yearstea+mathprep+sex+minority+ses+(1+math
 summary(rstc.3)
 ranova(rstc.3, refit=F)
 ```
-The correlated math prep is just a bit to high with a pvalue of .09 thus it is insignificant and seems to add no value to the model
+
+The correlated math prep is just a bit to high with a pvalue of .09, thus it is insignificant and seems to add no value to the model.
 
 \textbf{Question:} Anything unusual about the variances? Why might this have occurred? (hint: what did you add to the model?)
 
 \textbf{Answer:} The random slope for mathknow greatly increases in the second model, which is probably due to its correlation with the random intercept at the school-level.
 
-There seems to be an issue with the model as the slope and intercept correlation is negative one, this could be due to the sample sizes of the classrooms as some only have a single observation
-
-B. note: Also -- weird that correlation among slope and intercept is prefectly -1. This looks like model is not fitting properly -- probably because some classrooms have very few observations so not all parameters are estimated.
+There seems to be an issue with the model as the slope and intercept correlation is negative one, this could be due to the sample sizes of the classrooms as some only have a single observation.
 
 ##Random slopes for student-level predictors varying at classroom level
 
@@ -197,7 +197,8 @@ rss.2 <-lmer(Math1~housepov+mathknow+yearstea+mathprep+sex+minority+ses+(1+minor
 summary(rss.2)
 ranova(rss.1, refit=F)
 ```
-Sex random slope with class id is insignificant with a p value of 1.0
+
+Sex random slope with class id is insignificant with a p value of 1.0.
 
 #SES
 ```{r}
@@ -205,7 +206,8 @@ rss.3 <-lmer(Math1~housepov+mathknow+yearstea+mathprep+sex+minority+ses+(1+ses||
 summary(rss.3)
 ranova(rss.3, refit=F)
 ```
-With a p-value of .206 ses is insignificant from an uncorrelated random slope at classroom level
+
+With a p-value of .206 ses is insignificant from an uncorrelated random slope at classroom level.
 
 \textbf{Question:} why is this a bad idea to include a classroom-level variable with random slopes at classroom-level?
 
@@ -220,7 +222,8 @@ rssc.1 <-lmer(Math1~housepov+mathknow+yearstea+mathprep+sex+minority+ses+(1+sex|
 summary(rssc.1)
 ranova(rssc.1, refit=F)
 ```
-The uncorrelated random slope is insignificant with a p value of .779
+
+The uncorrelated random slope is insignificant with a p value of .779.
 
 #minority
 ```{r}
@@ -228,7 +231,8 @@ rssc.2 <-lmer(Math1~housepov+mathknow+yearstea+mathprep+sex+minority+ses+(1+mino
 summary(rssc.2)
 ranova(rssc.2)
 ```
-The uncorrelated random slope for minority is insignificant with a p value of .202
+
+The uncorrelated random slope for minority is insignificant with a p value of .202.
 
 #SES
 ```{r}
@@ -236,7 +240,8 @@ rssc.3 <-lmer(Math1~housepov+mathknow+yearstea+mathprep+sex+minority+ses+(1+ses|
 summary(rssc.3)
 ranova(rssc.3)
 ```
-The uncorrelated random slope for ses is insignificant with a pvalue of .147
+
+The uncorrelated random slope for ses is insignificant with a pvalue of .147.
 
 ##Random slopes for student-level predictors varying at school level
 
@@ -247,7 +252,8 @@ rss.4 <-lmer(Math1~housepov+mathknow+yearstea+mathprep+sex+minority+ses+(1+sex||
 summary(rss.4)
 ranova(rss.4, refit=F)
 ```
-The uncorrelated ses random slope at a school level is insignifcant with a p value of .433
+
+The uncorrelated sex random slope at a school level is insignifcant with a p value of .433.
 
 #minority
 ```{r}
@@ -255,7 +261,8 @@ rss.5 <-lmer(Math1~housepov+mathknow+yearstea+mathprep+sex+minority+ses+(1+minor
 summary(rss.5)
 ranova(rss.5,refit=F)
 ```
-insignificant with a pvalue of 1.0
+
+The uncorrelated minority random slope at school level is insignificant with a pvalue of 1.0.
 
 #SES
 ```{r}
@@ -263,7 +270,8 @@ rss.6 <-lmer(Math1~housepov+mathknow+yearstea+mathprep+sex+minority+ses+(1+ses||
 summary(rss.6) #IS SIG
 ranova(rss.6,refit=F)
 ```
-is signifcant with a p value of .03
+
+The uncorrelated ses random slope at school level is signifcant with a p value of .03.
 
 ##Allowing for correlations with random intercepts
 
@@ -274,7 +282,8 @@ rssc.4 <-lmer(Math1~housepov+mathknow+yearstea+mathprep+sex+minority+ses+(1+sex|
 summary(rssc.4)
 ranova(rssc.4, refit=F)
 ```
-insignificant with a pvalue of .394
+
+The correlated sex random slope at school-level is insignificant with a pvalue of .394.
 
 #minority
 ```{r}
@@ -282,7 +291,8 @@ rssc.5 <-lmer(Math1~housepov+mathknow+yearstea+mathprep+sex+minority+ses+(1+mino
 summary(rssc.5)
 ranova(rssc.5,refit=F) #sig
 ```
-significant with a pvalue of .0025
+
+The correlated minority random slope at school-level is significant with a pvalue of .0025.
 
 #SES
 ```{r}
@@ -290,7 +300,8 @@ rssc.6 <-lmer(Math1~housepov+mathknow+yearstea+mathprep+sex+minority+ses+(1+ses|
 summary(rssc.6)
 ranova(rssc.6,refit=F) #not sig
 ```
-Very close to significance but not quite there with a pvalue of .0766
+
+The correlated ses random slope at school-level is Very close to significance but not quite there with a pvalue of .0766.
 
 
 \textbf{Question:} Report unusual changes in variance.
@@ -308,6 +319,7 @@ complex <-lmer(Math1~housepov+mathknow+yearstea+mathprep+sex+minority+ses+(0+ses
 summary(complex)
 ranova(complex, refit=F)
 ```
+
 \textbf{Question:} Is the more complex model (with both random slopes in it) justified?
 
 \textbf{Answer:} The complex model is justified since the rand test shows that the random slopes are both statistically significant at the 0.05 level, the only question revolves around statistical significance justifying compared to the Bayesian approach that would push for a simpler model.
@@ -330,7 +342,6 @@ $V_C$, $V_S$, and $V_E$
 
 ```{r}
 summary(model4)
-
 ```
 
 \textbf{Question:} For the most complicated (all fixed effects) random INTERCEPTS ONLY model, what are: $V_C$, $V_S$, $V_E$?
@@ -348,6 +359,7 @@ summary(model4)
 ```{r}
 summary(rss.6)
 ```
+
 \textbf{Question:} Now consider the model with a random slope in ses. What are: $V_C$, $V_S(ses=0)$, $V_E$ ? We need to list 'ses=0' here, or we don't know how to use the slope variance
 
 \textbf{Answer:} For the model with a random slope in ses at the school level, $V_C$ = 88.56, $V_S(ses=0)$ = 167.98, and $V_E$ = 1035.12.
@@ -371,11 +383,10 @@ summary(rssc.5)
 $V_S(minority=+0.50) = 381.20 + (0.50)^2343.13 + 2(0.50)(-0.83)\sqrt{381.20}*\sqrt{343.13} = 166.801$, and
 
 $V_S(minority=+0.75) = 381.20 + (0.25)^2343.13 + 2(0.25)(-0.83)\sqrt{381.20}*\sqrt{343.13} = 123.9384$.
+
 ```{r}
 summary(complex)
-
 ```
-
 
 \textbf{Question:} Now consider the model with a random slope in ses & minority. What are: $V_C$, $V_S(minority=0,ses=0)$, $V_E$? We need to list 'ses=0, minority=0' here, or we don't know how to use the slope variance.
 
