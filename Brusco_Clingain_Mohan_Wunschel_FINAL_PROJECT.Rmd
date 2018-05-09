@@ -1,0 +1,23 @@
+---
+title: "Multi-Level Models: Final Project"
+author: "Bianca Brusco, Clare Clingain, Kaushik Mohan, & Frankie Wunschel"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+All four parts of the Group Project are compiled in this PDF. Here is how the group split up the work. Bookmark tabs have been created in the PDF for ease of finding each member's section.
+
+-Part 1: Frankie
+
+-Part 2: Clare
+
+-Part 3: Bianca
+
+-Part 4: Kaushik
+
+--------------------------------------------------------------------------------------------------
+
+
