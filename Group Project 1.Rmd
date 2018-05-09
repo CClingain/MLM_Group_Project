@@ -60,32 +60,27 @@ model3 <- lmer(Math1~housepov+mathknow+yearstea+mathprep+(1|schoolid/classid),da
 summary(model3)
 ```
 
-
-
 ## creating reducted dataset taking away missing data
+
+To deal with the missing data, we removed those students. This left us with a sample of 1081 students. 
+
 ```{r}
 classroom_red = na.omit(classroom)
 model2_red <- lmer(Math1~housepov+(1|schoolid/classid),data=classroom_red)
 model3_red <- lmer(Math1~housepov+mathknow+yearstea+mathprep+(1|schoolid/classid),data=classroom_red)
 anova(model2_red, model3_red, refit = F)
-
-
 ```
-
 
 Change in $\sigma_\epsilon^2$ and $\sigma_\eta^2$: 
 $\sigma_\epsilon^2$ decreased to 1136.43, 
 $\sigma_\eta^2$ increased to 94.36; 
 $\sigma_\zeta^2$ = 223.31
 
-
 The reason epsilon was reduced but eta was not is because the new model explains what is happening at a student level, but not at a classroom level. In addition adding the classroom level predictors makes it so that more of the overall variation is explained by "structured" variation rather than by unstructured ($\epsilon$) May increase because of sample decrease (missing data) --
 
 The anova test comparing the school level predictor to the model with the classroom predictors has a p-value 0.087, so we fail to reject the null hypothesis at our $\alpha = 0.05$ and thus though boarderline to signifcance, it still concludes that the models are not different so adding the classroom level predictors isn't neccesary.
 
-
-
-#Add all student-level predictors
+## Add all student-level predictors
 
 ```{r}
 model4 <- lmer(Math1~housepov+mathknow+yearstea+mathprep+sex+minority+ses+(1|schoolid/classid),data=classroom)
@@ -93,7 +88,6 @@ summary(model4)
 ```
 
 We test this new block compared to the model with just school level predictors as the classroom level predictors were not siginificant.
-
 
 ```{r}
 model4_red <- lmer(Math1~housepov+mathknow+yearstea+mathprep+sex+minority+ses+(1|schoolid/classid),data=classroom_red)
@@ -103,12 +97,11 @@ anova(model3, model4, refit = F)
 
 ```
 
-$\sigma_\epsilon^2$ decreased to 1064.95, 
-$\sigma_\eta^2$ decreased to 93.89, 
-$\sigma_\zeta^2$ decreased to 169.45 
+$\sigma_\epsilon^2$ decreased to 1064.95,
+$\sigma_\eta^2$ decreased to 93.89, and
+$\sigma_\zeta^2$ decreased to 169.45.
 
 School level may drop because sstudents may be similar within schools but different between schools, or the fact that math know directly effects school level effects, better schools tend to have better teachers
-
 
 $$\hat{math1st_{ijk}} = \beta_{0ijk} + \zeta_{k} + \eta_{jk} + \epsilon_{ijk} + \beta_1Housepov_k +\beta_2Mathknow_{jk} + \beta_3YearsTea_{jk} + \beta_4Mathprep_{jk} + \beta_5sex_{ijk} + \beta_6minority_{ijk} + \beta_7ses_{ijk}$$
 
@@ -147,7 +140,7 @@ There seems to be no need for for the random slope for math prep at a school lev
 
 ##Allowing correlations with random intercepts
 
-#ONE BY ONE
+##ONE BY ONE
 ```{r}
 rstc.1 <-lmer(Math1~housepov+mathknow+yearstea+mathprep+sex+minority+ses+(1+mathknow|schoolid)+(1|classid),data=classroom)
 summary(rstc.1)
@@ -156,7 +149,7 @@ ranova(rstc.1, refit=F)
 
 The correlated math knowledge is insignificant and seems to add no value to the model.
 
-#yearstea
+###yearstea
 ```{r}
 rstc.2 <-lmer(Math1~housepov+mathknow+yearstea+mathprep+sex+minority+ses+(1+yearstea|schoolid)+(1|classid),data=classroom)
 summary(rstc.2)
@@ -165,7 +158,7 @@ ranova(rstc.2,refit=F)
 
 This correlated random slope for years teaching is right on the cusp of signicance and should be observed further in attempts to understand its need for adding it to the model it has a p value of .0543.
 
-#mathprep
+###mathprep
 ```{r}
 rstc.3 <-lmer(Math1~housepov+mathknow+yearstea+mathprep+sex+minority+ses+(1+mathprep|schoolid)+(1|classid),data=classroom)
 summary(rstc.3)
@@ -182,16 +175,19 @@ There seems to be an issue with the model as the slope and intercept correlation
 
 ##Random slopes for student-level predictors varying at classroom level
 
-#ONE BY ONE
-#sex
+##ONE BY ONE
+###sex
+
 ```{r}
 rss.1 <-lmer(Math1~housepov+mathknow+yearstea+mathprep+sex+minority+ses+(1+sex||classid)+(1|schoolid),data=classroom)
 summary(rss.1)
 ranova(rss.1, refit=F)
 ```
-Sex random slope with class is insignificant with a p value of 1
 
-#minority
+Sex random slope with class is insignificant with a p value of 1.
+
+###minority
+
 ```{r}
 rss.2 <-lmer(Math1~housepov+mathknow+yearstea+mathprep+sex+minority+ses+(1+minority||classid)+(1|schoolid),data=classroom)
 summary(rss.2)
@@ -200,7 +196,8 @@ ranova(rss.1, refit=F)
 
 Sex random slope with class id is insignificant with a p value of 1.0.
 
-#SES
+###SES
+
 ```{r}
 rss.3 <-lmer(Math1~housepov+mathknow+yearstea+mathprep+sex+minority+ses+(1+ses||classid)+(1|schoolid),data=classroom)
 summary(rss.3)
@@ -215,8 +212,9 @@ With a p-value of .206 ses is insignificant from an uncorrelated random slope at
 
 ##Allowing for correlations with random intercepts
 
-#ONE BY ONE
-#sex
+##ONE BY ONE
+###Sex
+
 ```{r}
 rssc.1 <-lmer(Math1~housepov+mathknow+yearstea+mathprep+sex+minority+ses+(1+sex|classid)+(1|schoolid),data=classroom)
 summary(rssc.1)
@@ -225,7 +223,8 @@ ranova(rssc.1, refit=F)
 
 The uncorrelated random slope is insignificant with a p value of .779.
 
-#minority
+###Minority
+
 ```{r}
 rssc.2 <-lmer(Math1~housepov+mathknow+yearstea+mathprep+sex+minority+ses+(1+minority|classid)+(1|schoolid),data=classroom)
 summary(rssc.2)
@@ -234,7 +233,8 @@ ranova(rssc.2)
 
 The uncorrelated random slope for minority is insignificant with a p value of .202.
 
-#SES
+###SES
+
 ```{r}
 rssc.3 <-lmer(Math1~housepov+mathknow+yearstea+mathprep+sex+minority+ses+(1+ses|classid)+(1|schoolid),data=classroom)
 summary(rssc.3)
@@ -245,8 +245,9 @@ The uncorrelated random slope for ses is insignificant with a pvalue of .147.
 
 ##Random slopes for student-level predictors varying at school level
 
-#ONE BY ONE
-#sex
+##ONE BY ONE
+###Sex
+
 ```{r}
 rss.4 <-lmer(Math1~housepov+mathknow+yearstea+mathprep+sex+minority+ses+(1+sex||schoolid)+(1|classid),data=classroom)
 summary(rss.4)
@@ -255,7 +256,8 @@ ranova(rss.4, refit=F)
 
 The uncorrelated sex random slope at a school level is insignifcant with a p value of .433.
 
-#minority
+###Minority
+
 ```{r}
 rss.5 <-lmer(Math1~housepov+mathknow+yearstea+mathprep+sex+minority+ses+(1+minority||schoolid)+(1|classid),data=classroom)
 summary(rss.5)
@@ -264,7 +266,8 @@ ranova(rss.5,refit=F)
 
 The uncorrelated minority random slope at school level is insignificant with a pvalue of 1.0.
 
-#SES
+###SES
+
 ```{r}
 rss.6 <-lmer(Math1~housepov+mathknow+yearstea+mathprep+sex+minority+ses+(1+ses||schoolid)+(1|classid),data=classroom)
 summary(rss.6) #IS SIG
@@ -275,8 +278,9 @@ The uncorrelated ses random slope at school level is signifcant with a p value o
 
 ##Allowing for correlations with random intercepts
 
-#ONE BY ONE
-#sex
+##ONE BY ONE
+###Sex
+
 ```{r}
 rssc.4 <-lmer(Math1~housepov+mathknow+yearstea+mathprep+sex+minority+ses+(1+sex|schoolid)+(1|classid),data=classroom)
 summary(rssc.4)
@@ -285,7 +289,8 @@ ranova(rssc.4, refit=F)
 
 The correlated sex random slope at school-level is insignificant with a pvalue of .394.
 
-#minority
+###Minority
+
 ```{r}
 rssc.5 <-lmer(Math1~housepov+mathknow+yearstea+mathprep+sex+minority+ses+(1+minority|schoolid)+(1|classid),data=classroom)
 summary(rssc.5)
@@ -294,7 +299,8 @@ ranova(rssc.5,refit=F) #sig
 
 The correlated minority random slope at school-level is significant with a pvalue of .0025.
 
-#SES
+###SES
+
 ```{r}
 rssc.6 <-lmer(Math1~housepov+mathknow+yearstea+mathprep+sex+minority+ses+(1+ses|schoolid)+(1|classid),data=classroom)
 summary(rssc.6)
@@ -310,9 +316,11 @@ The correlated ses random slope at school-level is Very close to significance bu
 
 ##Complex model 
 
-#Take two predictors that had sig random slopes and add to model, test for need of one conditional on the other
-#minority is sig for correlated
-#ses is sig for uncorrelated
+Take two predictors that had sig random slopes and add to model, test for need of one conditional on the other
+
+-Minority is sig for correlated
+
+-Ses is sig for uncorrelated
 
 ```{r}
 complex <-lmer(Math1~housepov+mathknow+yearstea+mathprep+sex+minority+ses+(0+ses|schoolid)+(1+minority|schoolid)+(1|classid),data=classroom)
@@ -416,7 +424,7 @@ summary(complex)
 
 \textbf{Question:} If you had a large value for $\eta_{0jk}$, would you expect a large or small or "any" value for: the two random slope terms, $\zeta_{1k}$ and $\zeta_{2k}$ for ses and minority?
 
-\textbf{Answer:} If you have a very large $\eta_{0jk}$ you would expect a small value for $\zeta_{1k}$ and $\zeta_{2k}$ but the $\zeta_{2k}$ would not be as small due to its negative correlation with our $\zeta_{0k}$ which is effected by our eta value
+\textbf{Answer:} If you have a very large $\eta_{0jk}$ you would expect a small value for $\zeta_{1k}$ and $\zeta_{2k}$ but the $\zeta_{2k}$ would not be as small due to its negative correlation with our $\zeta_{0k}$ which is effected by our eta value.
 
 \textbf{Question:} If you had a large value for $\zeta_{0k}$, would you expect a large or small or "any" value for: the two random slope terms, $\zeta_{1k}$ and $\zeta_{2k}$ for ses and minority (discuss each separately)?
 
