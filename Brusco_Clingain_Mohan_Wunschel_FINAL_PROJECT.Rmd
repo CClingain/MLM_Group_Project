@@ -726,7 +726,6 @@ plot(classroom2$zeta0c,classroom2$zeta1c, main = "Zeta0 vs. Zeta1",
       cex = 0.8, col = rainbow(100), pos = 1)
 ```
 
-
 ##Tracking down outliers
 
 The outliers from the plots above can be tracked down by examining the data points via their IDs. 
@@ -735,16 +734,23 @@ The outliers from the plots above can be tracked down by examining the data poin
 classroom2$zeta0c[classroom2$schoolid==45][[1]]/classroom2$zeta1c[classroom2$schoolid==45][[1]]
 classroom2$zeta0c[classroom2$schoolid==68][[1]]/classroom2$zeta1c[classroom2$schoolid==68][[1]]
 classroom2$zeta0c[classroom2$schoolid==30][[1]]/classroom2$zeta1c[classroom2$schoolid==30][[1]]
-
-#there seems to be a trend here that the zeta0/zeta1 ratio is > 3, so let's filter it out
-outliers <- classroom2 %>% filter(round(zeta0c/zeta1c,6)==1.868107) %>% select(zeta0c,zeta1c,schoolid,minority)
-#now let's make sure the IDs from the plot are showing up here
-unique(outliers$schoolid)
-#They are! Now what's going on with minority?
-table(outliers$minority)
-tapply(outliers$minority, INDEX = outliers$schoolid, FUN = sum)
-#The values match -- all students are minorities!
 ```
+
+There seems to be a trend here that the zeta0/zeta1 ratio is = 1.868107, so let's filter it out.
+
+```{r}
+outliers <- classroom2 %>% filter(round(zeta0c/zeta1c,6)==1.868107) %>%
+  select(zeta0c,zeta1c,schoolid,minority)
+```
+Now let's make sure the IDs from the plot are showing up here.
+```{r}
+unique(outliers$schoolid)
+```
+They are! Now what's going on with minority ($\zeta_1$)?
+```{r}
+table(outliers$minority)
+```
+All the students are minorities!
 
 It seems like the (perfectly) positive trend in the data is being driven by schools in which all the students are minorities. That is, in schools in which there are only minority students, all other factors held equal, there is a boost in math scores in 1st grade for minority students. In a way, being in a totally minority school is a "protective" factor for minority students.
 
@@ -1062,18 +1068,17 @@ summary(fit3)
 
 ```
 
-#### *is the estimated s.d. (square root of variance) of the random slope associated with SES large enough 
-#### *  so that a value +/- 1 s.d. is sufficient to "cancel" (or flip the sign) the fixed effect for this predictor?
+#### *is the estimated s.d. (square root of variance) of the random slope associated with SES large enough so that a value +/- 1 s.d. is sufficient to "cancel" (or flip the sign) the fixed effect for this predictor?
 
 The estimated standard deviation of the random slope associated with SES is $6.818$. We note that this is not large enough to "cancel" or flip the sign of the fixed-effect on SES within $+/- 1$ standard deviation. 
 
-The majority of the values (middle $68\%$) for the fixed effect on SES is within the range $[(9.32191 - 6.818),(9.32191 - 6.818)] = [2.50391,16.13991]$
+The majority of the values (middle $68\%$) for the fixed effect on SES is within the range $[(9.32191 - 6.818),(9.32191 + 6.818)] = [2.50391,16.13991]$
 
 
 ## Residuals and Q-Q Plot
 *compute residuals in this final model.  generate a qq plot and density (STATA: qnorm; kdensity ..., normal) 
 *Is there any reason to question the normality assumption?
-```{r part4 residuals}
+```{r part4 residuals,fig.width=6,fig.height=4}
 fit3.residuals <- residuals(fit3)
 sm.density(fit3.residuals,model="Normal",xlab="Residuals")
 qqnorm(y=fit3.residuals)
