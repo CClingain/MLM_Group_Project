@@ -14,7 +14,7 @@ require(lme4)
 require(lattice)
 require(lmerTest)
 library(ggplot2); vanillaR <- F
-classroom <- read.csv("classroom.csv")
+classroom2 <- read.csv("classroom.csv")
 ```
 
 
@@ -25,8 +25,6 @@ classroom <- read.csv("classroom.csv")
 In this part of the project, no variables of interested have missing observation. Therefore, the full dataset is used. 
 
 ```{r person-period file}
-#re-read data
-classroom2 <- na.omit(classroom)
 #new variables
 classroom2 <- classroom2 %>% mutate(math0 = mathkind) %>% mutate(math1 = mathkind+mathgain)
 #reshape the data
@@ -58,9 +56,12 @@ summary(fit1)
 
 ## Add child-level random intercept
 
+Q: BY "random intercept" do you mean just first obsrvation 
+
+
 To the previous model, we now add random intercepts for child:
 
-$$Math_{tijk} = b_0 + \delta_{0tijk} + \zeta_{0k} + b_1*Time_{tijk} + \epsilon_{tijk}$$
+$$Math_{tijk} = b_0 + \delta_{0ijk} + \zeta_{0k} + b_1*Time_{tijk} + \epsilon_{tijk}$$
 
 where $\delta_{0tijk} \sim N(0, \sigma_{\delta_0}^2), \zeta_{0k} \sim N(0, \sigma_{zeta0}^2)$ and $\epsilon_{tijk} \sim N(0, \sigma_{\epsilon}^2)$ independetly of one another. 
 
@@ -72,8 +73,8 @@ fit2 <- lmer(math ~ year + (1|schoolid/childid), data = class_pp)
 summary(fit2)
 ```
 
-In model 0 the variance $\sigma_{\zeta_0}^2 = 377$ and in model 1  $\sigma_{\zeta_0}^2 = 293.2$.  
-In model 0 , the varaince for $\sigma_{\epsilon}^2 = 1288$ and in model 1 $\sigma_{\epsilon_0}^2 = 602.2$. We note that including child-level variation leads to a decrease in the variance of both the random effects. 
+In model 0 the variance $\sigma_{\zeta_0}^2 = 348.7$ and in model 1  $\sigma_{\zeta_0}^2 = 307.5$.  
+In model 0 , the varaince for $\sigma_{\epsilon}^2 = 1268.4$ and in model 1 $\sigma_{\epsilon_0}^2 = 599.1$. We note that including child-level variation leads to a decrease in the variance of both the random effects. 
 
 ## Compute Pseudo-R^2
 
@@ -81,14 +82,14 @@ Compute a pseudo R^2 relating the between school variation and ignoring between 
 
 We calculate this as :
 
-$$\frac{\sigma_{\zeta_0}^2(M_0) - \sigma_{\zeta_0}^2(M_1)}{\sigma_{\zeta_0}^2(M_0)} = \frac{377-293.2}{377} = 0.22$$
-The between-school variance is reduced by 22% ( or 'explained') with the introduction of student random effect. 
+$$\frac{\sigma_{\zeta_0}^2(M_0) - \sigma_{\zeta_0}^2(M_1)}{\sigma_{\zeta_0}^2(M_0)} = \frac{348.7-307.5}{348.7} = 0.12$$
+The between-school variance is reduced by 12% ( or 'explained') with the introduction of student random effect. 
 
 \textbf{Does the total variation stay about the same?}
 
 ```{r pp mods totvariance}
-tot_m0 = 337 + 1288
-tot_m1 = 722 + 293.2 + 602.2 
+tot_m0 = 348.7 + 1268.4
+tot_m1 = 702 + 307.5 + 599.1 
 paste("Tot variance for model 0 : ", tot_m0)
 paste("Tot variance for model 1: ", tot_m1)
 
@@ -100,9 +101,9 @@ There is only a slightly decrease in the total variance between Model 0 and Mode
 
 We now add a random slope ($\zeta_1$) for time trend within schools.
 
-$$Math_{tijk} = b_0 + \delta_{0tijk} + \zeta_{0k} + (b_1 + \zeta_{1k})*Time_{tijk} + \epsilon_{tijk}$$
+$$Math_{tijk} = b_0 + \delta_{0ijk} + \zeta_{0k} + (b_1 + \zeta_{1k})*Time_{tijk} + \epsilon_{tijk}$$
 
-where $\delta_{0tijk} \sim N(0, \sigma_{\delta_0}^2), \quad \zeta_{0k} \sim N(0, \sigma_{zeta0}^2), \quad \zeta_{1k} \sim N(0, \sigma_{zeta0}^2)$ and $\epsilon_{tijk} \sim N(0, \sigma_{\epsilon}^2)$ -- each independetly of one another. 
+where $\delta_{0tijk} \sim N(0, \sigma_{\delta_{0ijk}^2), \quad \zeta_{0k} \sim N(0, \sigma_{\zeta_{0}}^2), \quad \zeta_{1k} \sim N(0, \sigma_{\zeta_{0}}^2)$ and $\epsilon_{tijk} \sim N(0, \sigma_{\epsilon}^2)$ -- each independetly of one another. 
 
 We refer to this as Model 2
 
@@ -132,6 +133,13 @@ geom_point() + labs(x = "Zeta_{0k} BLOPs", y = "Zeta_{1k} BLOps") + theme_minima
 ```
 
 From the plot, the BLOPs for $\zeta_{0k}$ and for $\zeta_{1k}$ appear uncorrelated, reflecting the way in which the model was built. 
+In the BLUPS, we have a correlation of:
+
+```{r}
+cor(pp_ranefs$schoolid[,2],pp_ranefs$schoolid[,1]) 
+```
+
+That is, a very low negative correlation as we see from the plot. (test for sig)
 
 ## Heteroscedasticity in the random effects
 
@@ -143,8 +151,8 @@ $Math_{tijk} = b_0 + \delta_{0tijk} + \zeta_{0k} + (b_1 + \zeta_{1k})Time_{tijk}
 
 So we have that (in this model, in which we are forcing correlation of 0 between slope and intercept):
 
--  $V_S(year = 0) = \sigma_{\zeta_{0k}}^2 = 85.96$
--  $V_S(year = 1) = \sigma_{\zeta_{0k}}^2 + \sigma_{\zeta_{1k}}^2 = 85.96 + 315.69 = 401.65$
+-  $V_S(year = 0) = \sigma_{\zeta_{0k}}^2 = 324.79$
+-  $V_S(year = 1) = \sigma_{\zeta_{0k}}^2 + \sigma_{\zeta_{1k}}^2 = 88.67 + 324.79 = 413.46$
 
 ## Run model separately by year
 
@@ -162,9 +170,12 @@ summary(fit4)
 class_year1 = class_pp[class_pp$year == 1,]
 fit5 = lmer(math ~ (1 | schoolid), data = class_year1)
 summary(fit5)
+
+
+
 ```
 
-In this case, for the Year 0 Model, we get an estimated $\hat{\sigma}^2_{\zeta_{0k}} = 364.1$, while for Year 1 Model, we have $\hat{\sigma}^2_{\zeta_{0k}} = 279.1$. We note that these estimates are different from the ones computed above. 
+In this case, for the Year 0 Model, we get an estimated $\hat{\sigma}^2_{\zeta_{0k}} = 364.3$, while for Year 1 Model, we have $\hat{\sigma}^2_{\zeta_{0k}} = 306.8$. We note that these estimates are different from the ones computed above. 
 
 ## Allow for correlation 
 
@@ -176,21 +187,23 @@ summary(fit6)
 
 ```
 
-Correlation beteween $\zeta_0$ and $\zeta_1$ = -0.53. 
+Correlation beteween $\zeta_0$ and $\zeta_1$ = -0.45. 
 
 To test whether the correlation is statistically significant, we can compare Model 2 with Model 3 using an anova test. 
 
 ```{r}
 anova(fit3,fit6, refit = F)
 ```
-With a p-value $p = 0.0005678$, we reject the null hypothesis at $\alpha = 0.05$ significance level, and conclude that there correlation term is statistically significant. 
+With a p-value $p = 0.003$, we reject the null hypothesis at $\alpha = 0.05$ significance level, and conclude that there correlation term is statistically significant. 
 
 
 So we have that (in this model where we are allowing for correlation between slope and intercept):
 
--  $V_S(year = 0) = \sigma_{\zeta_{0k}}^2 = 373.5$
--  $V_S(year = 1) = \sigma_{\zeta_{0k}}^2 + \sigma_{\zeta_{1k}}^2 + 2\rho_{01}\sigma_{\zeta_{0k}}\sigma_{\zeta_{1k}}= 373.5 + 112.4 - 2*0.53*\sqrt{373.5}\sqrt{112.4} = 268.7$
+-  $V_S(year = 0) = \sigma_{\zeta_{0k}}^2 = 370.6$
+-  $V_S(year = 1) = \sigma_{\zeta_{0k}}^2 + \sigma_{\zeta_{1k}}^2 + 2\rho_{01}\sigma_{\zeta_{0k}}\sigma_{\zeta_{1k}}= 370.6 + 109.1 - 2*0.45*\sqrt{370.6}\sqrt{109.1} = 298.72$
 
-These estimates are a lot closer to the school variances that result from fitting the models for the two years separately ( in which we have $\sigma_{\zeta}^2$ respectively be 364 for year 0 and 279 for year 1. 
+
+
+These estimates are a lot closer to the school variances that result from fitting the models for the two years separately ( in which we have $\sigma_{\zeta}^2$ respectively be 364.3 for year 0 and 306.8 for year 1. 
 
 Therefore, it seemt that the model that allows for correlation between the two random effects has a better fit than the one forcing that correlation to be 0. 
