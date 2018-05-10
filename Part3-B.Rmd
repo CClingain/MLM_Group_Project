@@ -56,8 +56,6 @@ summary(fit1)
 
 ## Add child-level random intercept
 
-Q: BY "random intercept" do you mean just first obsrvation 
-
 
 To the previous model, we now add random intercepts for child:
 
@@ -137,9 +135,16 @@ In the BLUPS, we have a correlation of:
 
 ```{r}
 cor(pp_ranefs$schoolid[,2],pp_ranefs$schoolid[,1]) 
+corrtestp = cor.test(pp_ranefs$schoolid[,2],pp_ranefs$schoolid[,1], 
+                    method = "pearson")$p.value
+
+paste("P-value for pearson test for correlatio:", round(corrtestp,3))
+
+
 ```
 
-That is, a very low negative correlation as we see from the plot. (test for sig)
+That is, between the slope random effects and the ranom intercept blups, there is a very small negative correlation, which is not significantly different from 0 -- which we see from the plot and would expect from how we have specified the model. 
+
 
 ## Heteroscedasticity in the random effects
 
@@ -156,7 +161,7 @@ So we have that (in this model, in which we are forcing correlation of 0 between
 
 ## Run model separately by year
 
-We now examine what happens if we run the model separately by year. Do we get the same etimates for the variance between schools?
+We now examine what happens if we run the model separately by year. Do we get the same estimates for the variance between schools?
 
 ```{r}
 class_year0 = class_pp[class_pp$year == 0,]
@@ -170,9 +175,6 @@ summary(fit4)
 class_year1 = class_pp[class_pp$year == 1,]
 fit5 = lmer(math ~ (1 | schoolid), data = class_year1)
 summary(fit5)
-
-
-
 ```
 
 In this case, for the Year 0 Model, we get an estimated $\hat{\sigma}^2_{\zeta_{0k}} = 364.3$, while for Year 1 Model, we have $\hat{\sigma}^2_{\zeta_{0k}} = 306.8$. We note that these estimates are different from the ones computed above. 
@@ -206,4 +208,5 @@ So we have that (in this model where we are allowing for correlation between slo
 
 These estimates are a lot closer to the school variances that result from fitting the models for the two years separately ( in which we have $\sigma_{\zeta}^2$ respectively be 364.3 for year 0 and 306.8 for year 1. 
 
-Therefore, it seemt that the model that allows for correlation between the two random effects has a better fit than the one forcing that correlation to be 0. 
+Therefore, it seems that the model that allows for correlation between the two random effects has a better fit than the one forcing that correlation to be 0. 
+
