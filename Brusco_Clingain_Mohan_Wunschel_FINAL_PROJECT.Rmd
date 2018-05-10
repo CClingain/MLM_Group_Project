@@ -559,7 +559,7 @@ new1 <-lmer(Math1st~housepov+mathknow+yearstea+mathprep+sex
 
 ##Residual that removes only the "fixed effects"
 
-Below we calculate the residuals that removes only the fixed effects. The boxplot of the residuals shows that there is great variation within schools and that there is a steady linear trend to the residuals, suggesting dependence. 
+Below we calculate the residuals that removes only the fixed effects. The boxplot of the residuals shows that there is great variation between schools and that there is a steady linear trend to the residuals, suggesting dependence. 
 
 ```{r pt2 q2}
 #predicted scores
@@ -606,15 +606,15 @@ geom_boxplot()
 
 ## Examining BLUPs for normality
 
-To examine the BLUPs for mormality, density plots and Q-Q plots were constructed. Both $zeta_0$ and $eta_0$ appear to be normal, with a few poossible outliers near the tails. 
+To examine the BLUPs for mormality, density plots and Q-Q plots were constructed. Both $\zeta_0$ and $\eta_0$ appear to be normal, with a few poossible outliers near the tails. 
 
 ```{r blups normality, fig.width=6, fig.height=4}
 par(mfrow=c(2,2))
 plot(density(zeta0), main ="Normality Check for Zeta")
 plot(density(eta0), main = "Normality Check for Eta")
 #looking good
-qqnorm(zeta0);qqline(zeta0)
-qqnorm(eta0);qqline(eta0)
+qqnorm(zeta0);qqline(zeta0,col=2)
+qqnorm(eta0);qqline(eta0,col=2)
 #looking good
 ```
 
@@ -707,8 +707,8 @@ plot(density(zeta0c), main ="Normality Check for Zeta")
 plot(density(eta0c), main = "Normality Check for Eta")
 # eta looks pretty normal
 #zeta not so much
-qqnorm(zeta0c, main = "Q-Q Plot for Zeta");qqline(zeta0c)
-qqnorm(eta0c, main = "Q-Q Plot for Eta");qqline(eta0c)
+qqnorm(zeta0c, main = "Q-Q Plot for Zeta");qqline(zeta0c,col=2)
+qqnorm(eta0c, main = "Q-Q Plot for Eta");qqline(eta0c,col=2)
 #zeta looking iffy, but with a few possible outliers
 #eta good too, with few outliers. 
 ```
@@ -758,7 +758,7 @@ In this part of the project, no variables of interested have missing observation
 
 ```{r person-period file}
 #new variables
-classroom2 <- classroom2 %>% mutate(math0 = mathkind) %>% mutate(math1 = mathkind+mathgain)
+classroom2 <- classroom %>% mutate(math0 = mathkind) %>% mutate(math1 = mathkind+mathgain)
 #reshape the data
 class_pp <- reshape(classroom2, varying = c("math0", "math1"), v.names = "math", timevar = "year",
 times = c(0, 1), direction = "long")
@@ -793,7 +793,7 @@ To the previous model, we now add random intercepts for child:
 
 $$Math_{tijk} = b_0 + \delta_{0ijk} + \zeta_{0k} + b_1*Time_{tijk} + \epsilon_{tijk}$$
 
-where $\delta_{0tijk} \sim N(0, \sigma_{\delta_0}^2), \zeta_{0k} \sim N(0, \sigma_{zeta0}^2)$ and $\epsilon_{tijk} \sim N(0, \sigma_{\epsilon}^2)$ independetly of one another. 
+where $\delta_{0tijk} \sim N(0, \sigma_{\delta_0}^2), \zeta_{0k} \sim N(0, \sigma_{\zeta_0}^2)$ and $\epsilon_{tijk} \sim N(0, \sigma_{\epsilon}^2)$ independetly of one another. 
 
 We refer to this as M1. 
 
@@ -804,7 +804,7 @@ summary(fit2)
 ```
 
 In model 0 the variance $\sigma_{\zeta_0}^2 = 348.7$ and in model 1  $\sigma_{\zeta_0}^2 = 307.5$.  
-In model 0 , the varaince for $\sigma_{\epsilon}^2 = 1268.4$ and in model 1 $\sigma_{\epsilon_0}^2 = 599.1$. We note that including child-level variation leads to a decrease in the variance of both the random effects. 
+In model 0 , the varaince $\sigma_{\epsilon}^2 = 1268.4$ and in model 1 $\sigma_{\epsilon}^2 = 599.1$. We note that including child-level variation leads to a decrease in the variance of both the random effects. 
 
 ## Compute Pseudo-R^2
 
@@ -829,11 +829,11 @@ There is only a slightly decrease in the total variance between Model 0 and Mode
 
 ## Add a random slope for time trend
 
-We now add a random slope ($\zeta_1$) for time trend within schools.
+We now add a random slope ($\zeta_{1k}$) for time trend between schools.
 
 $$Math_{tijk} = b_0 + \delta_{0ijk} + \zeta_{0k} + (b_1 + \zeta_{1k})*Time_{tijk} + \epsilon_{tijk}$$
 
-where $\delta_{0tijk} \sim N(0, \sigma_{\delta_{0ijk}}^2), \quad \zeta_{0k} \sim N(0, \sigma_{\zeta_{0}}^2), \quad \zeta_{1k} \sim N(0, \sigma_{\zeta_{0}}^2)$ and $\epsilon_{tijk} \sim N(0, \sigma_{\epsilon}^2)$ -- each independetly of one another. 
+where $\delta_{0tijk} \sim N(0, \sigma_{\delta_{0}}^2), \quad \zeta_{0k} \sim N(0, \sigma_{\zeta_{0}}^2), \quad \zeta_{1k} \sim N(0, \sigma_{\zeta_{1}}^2)$ and $\epsilon_{tijk} \sim N(0, \sigma_{\epsilon}^2)$ -- each independetly of one another. 
 
 We refer to this as Model 2
 
@@ -847,7 +847,7 @@ summary(fit3)
 
 ## Generate the BLUPs for this model (Model 2)
 
-Examine then whether the independence between zeta0 and zeta1 is reflected in a scatterplot of these two sets of effects. 
+Examine then whether the independence between $\zeta_0$ and $\zeta_1$ is reflected in a scatterplot of these two sets of effects. 
 
 
 
@@ -858,12 +858,12 @@ if (vanillaR) {
 plot(pp_ranefs$schoolid[,2],pp_ranefs$schoolid[,1]) 
 }else{
 ggplot(pp_ranefs$schoolid, aes(x = pp_ranefs$schoolid[,2], y = pp_ranefs$schoolid[,1] )) +
-geom_point() + labs(x = "Zeta_{0k} BLOPs", y = "Zeta_{1k} BLOps") + theme_minimal()
+geom_point() + labs(x = "Zeta_{0k} BLUPs", y = "Zeta_{1k} BLUPs") + theme_minimal()
 }
 ```
 
-From the plot, the BLOPs for $\zeta_{0k}$ and for $\zeta_{1k}$ appear uncorrelated, reflecting the way in which the model was built. 
-In the BLUPS, we have a correlation of:
+From the plot, the BLUPs for $\zeta_{0k}$ and for $\zeta_{1k}$ appear uncorrelated, reflecting the way in which the model was built. 
+In the BLUPs, we have a correlation of:
 
 ```{r}
 cor(pp_ranefs$schoolid[,2],pp_ranefs$schoolid[,1]) 
@@ -888,8 +888,8 @@ $Math_{tijk} = b_0 + \delta_{0tijk} + \zeta_{0k} + (b_1 + \zeta_{1k})Time_{tijk}
 
 So we have that (in this model, in which we are forcing correlation of 0 between slope and intercept):
 
--  $V_S(year = 0) = \sigma_{\zeta_{0k}}^2 = 324.79$
--  $V_S(year = 1) = \sigma_{\zeta_{0k}}^2 + \sigma_{\zeta_{1k}}^2 = 88.67 + 324.79 = 413.46$
+-  $V_S(year = 0) = \sigma_{\zeta_{0}}^2 = 324.79$
+-  $V_S(year = 1) = \sigma_{\zeta_{0}}^2 + (1^2)*\sigma_{\zeta_{1}}^2 = 88.67 + 324.79 = 413.46$
 
 ## Run model separately by year
 
@@ -933,8 +933,8 @@ With a p-value $p = 0.003$, we reject the null hypothesis at $\alpha = 0.05$ sig
 
 So we have that (in this model where we are allowing for correlation between slope and intercept):
 
--  $V_S(year = 0) = \sigma_{\zeta_{0k}}^2 = 370.6$
--  $V_S(year = 1) = \sigma_{\zeta_{0k}}^2 + \sigma_{\zeta_{1k}}^2 + 2\rho_{01}\sigma_{\zeta_{0k}}\sigma_{\zeta_{1k}}= 370.6 + 109.1 - 2*0.45*\sqrt{370.6}\sqrt{109.1} = 298.72$
+-  $V_S(year = 0) = \sigma_{\zeta_{0}}^2 = 370.6$
+-  $V_S(year = 1) = \sigma_{\zeta_{0}}^2 + \sigma_{\zeta_{1}}^2 + 2\rho_{\zeta_0\zeta_1}\sigma_{\zeta_{0}}\sigma_{\zeta_{1}}= 370.6 + 109.1 - 2*0.45*\sqrt{370.6}\sqrt{109.1} = 298.72$
 
 
 
@@ -974,7 +974,7 @@ summary(ugm)
 ```
 
 ##  Add student, classroom and school level fixed effects
-$MATH_{tijk} = b_0 + \delta_{0ijk} + (b_1 + \zeta_{1k} )TIME_{tijk} + b_2SEX_{ijk} +b_3SES_{ijk} + b_4MINORITY_{ijk} + b_5YEARSTEA_{jk} + b_6MATHKNOW_{jk} + b_7MATHPREP_{jk} + b_8HOUSEPOV_{k} + \zeta_{0k} + \epsilon_{tijk}$
+$MATH_{tijk} = b_0 + \delta_{0ijk} + (b_1 + \zeta_{1k} )TIME_{tijk} + b_2SES_{ijk} +b_3SEX_{ijk} + b_4MINORITY_{ijk} + b_5YEARSTEA_{jk} + b_6MATHKNOW_{jk} + b_7MATHPREP_{jk} + b_8HOUSEPOV_{k} + \zeta_{0k} + \epsilon_{tijk}$
 
 where $t$ represents occasion (in this case, year/grade), $i$ represents students, $j$ represents classrooms and $k$ represents schools. $\delta_{0ijk} \sim N(0,\sigma^2_{\delta_0})$, $\zeta_{0k} \sim N(0,\sigma^2_{\zeta_0})$, $\zeta_{1k} \sim N(0,\sigma^2_{\zeta_1})$ and $\epsilon_{ijk} \sim N(0,\sigma^2_{\epsilon})$ all independent of each other except for $\zeta_{0k}$ and $\zeta_{1k}$ having a correlation $\rho_{\zeta_{0}\zeta_{1}}$.
 
@@ -1044,15 +1044,15 @@ Model 2 explains $7.94\%$ of the between-child variance for $year=1$.
 *  what factors seem useful in describing ("explaining") differences between student outcomes? 
 *  Point out the direction of the effect.
 
-$SES$ and $MINORITY$ status are the significant fixed-effects terms in the model at $\alpha=0.05$ implying that these terms (being in Level 1) help to explain the between-student variance conditional on the school. 
+$SES$ and $MINORITY$ status are the significant fixed-effect terms in the model at $\alpha=0.05$ implying that these terms (being in Level 1) help to explain the between-student variance conditional on the school. 
 
-The coefficient on $SES$ is positive meaning that two students in the same school and student-level random effect and all else equal, the one with the higher $SES$ has a higher Math score.
+The coefficient on $SES$ is positive meaning that two students in the same school and conditional on the  student-level random effect estimate (BLUP) and all else equal, the one with the higher $SES$ has a higher Math score.
 
-The coefficient on $MINORITY$ status is negative meaning that two students in the same school and student-level random effect and all else equal, the one who is classified as a Minority student has a lower Math score.
+The coefficient on $MINORITY$ status is negative meaning that two students in the same school and conditional on the student-level random effect estimate (BLUP) and all else equal, the one who is classified as a Minority student has a lower Math score.
 
 ## Add random slope for SES
 
-$MATH_{tijk} = b_0 + \delta_{0ijk} + (b_1 + \zeta_{1k} )TIME_{tijk} + b_2SEX_{ijk} +(b_3+\zeta_{3k})SES_{ijk} + b_4MINORITY_{ijk} + b_5YEARSTEA_{jk} + b_6MATHKNOW_{jk} +b_7MATHPREP_{jk} + b_8HOUSEPOV_{k} + \epsilon_{tijk}$
+$MATH_{tijk} = b_0 + \delta_{0ijk} + (b_1 + \zeta_{1k} )TIME_{tijk} + (b_2+\zeta_{2k})SES_{ijk} +b_3SEX_{ijk} + b_4MINORITY_{ijk} + b_5YEARSTEA_{jk} + b_6MATHKNOW_{jk} +b_7MATHPREP_{jk} + b_8HOUSEPOV_{k} + \epsilon_{tijk}$
 
 where $t$ represents occasion (in this case, year/grade), $i$ represents students, $j$ represents classrooms and $k$ represents schools. $\delta_{0ijk} \sim N(0,\sigma^2_{\delta_0})$, $\zeta_{0k} \sim N(0,\sigma^2_{\zeta_0})$, $\zeta_{1k} \sim N(0,\sigma^2_{\zeta_1})$, $\zeta_{3k} \sim N(0,\sigma^2_{\zeta_3})$ and $\epsilon_{ijk} \sim N(0,\sigma^2_{\epsilon})$ all independent of each other except for $\zeta_{0k}$,  $\zeta_{1k}$ and $\zeta_{3k}$ could be correlated.
 
@@ -1062,12 +1062,12 @@ summary(fit3)
 
 ```
 
-## *is the estimated s.d. (square root of variance) of the random slope associated with SES large enough 
-*  so that a value +/- 1 s.d. is sufficient to "cancel" (or flip the sign) the fixed effect for this predictor?
+#### *is the estimated s.d. (square root of variance) of the random slope associated with SES large enough 
+#### *  so that a value +/- 1 s.d. is sufficient to "cancel" (or flip the sign) the fixed effect for this predictor?
 
 The estimated standard deviation of the random slope associated with SES is $6.818$. We note that this is not large enough to "cancel" or flip the sign of the fixed-effect on SES within $+/- 1$ standard deviation. 
 
-The majority of the values (middle $68\%$ ) for the fixed effect on SES is within the range $[(9.32191 - 6.818),(9.32191 - 6.818)] = [2.50391,16.13991]$
+The majority of the values (middle $68\%$) for the fixed effect on SES is within the range $[(9.32191 - 6.818),(9.32191 - 6.818)] = [2.50391,16.13991]$
 
 
 ## Residuals and Q-Q Plot
@@ -1091,12 +1091,12 @@ ranefs <- ranef(fit3)
 Delta0 <- ranefs$childid
 idx.school <- match(classroom2$schoolid, sort(unique(classroom2$schoolid))) 
 Zeta0 <- ranefs$schoolid[idx.school,1]
-Zeta1 <- ranefs$schoolid[idx.school,2]
-Zeta2 <- ranefs$schoolid[idx.school,3]
+Zeta1 <- ranefs$schoolid[idx.school,3]
+Zeta2 <- ranefs$schoolid[idx.school,2]
 
 ranefs <- data.frame(delta0=Delta0,zeta0=Zeta0,zeta1=Zeta1,zeta2=Zeta2)
 colnames(ranefs) <- c("Delta0","Zeta0","Zeta1","Zeta2")
 pairs(ranefs,cex=0.5)
 ```
 
-
+We note that the distribution of the BLUPs for $\delta_0$s are not homoscedastic particularly with respect to the $\zeta_0$. We note that as $\zeta_0$ is low, the $\delta_0$ range is a bit lower and when $\zeta_0$ is high, the range of $\delta_0$ is slightly higher compared to the previous case. This possibly indicates that we are not fully capturing the between-school variation in the data. 
