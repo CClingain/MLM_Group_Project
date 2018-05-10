@@ -6,7 +6,15 @@ output: pdf_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+library(sm)
+require(lme4)
+require(lattice)
+require(lmerTest)
+library(ggplot2); vanillaR <- F
+classroom <- read.csv("classroom.csv")
 ```
+
 
 All four parts of the Group Project are compiled in this PDF. Here is how the group split up the work. Bookmark tabs have been created in the PDF for ease of finding each member's section.
 
@@ -19,5 +27,1076 @@ All four parts of the Group Project are compiled in this PDF. Here is how the gr
 -Part 4: Kaushik
 
 --------------------------------------------------------------------------------------------------
+
+#Part 1: Frankie
+
+
+##Create 1st grade variable
+
+```{r}
+classroom <- classroom %>% mutate(Math1 = mathkind + mathgain)
+```
+
+##Random Intercepts for classroom, nested in schools UMM
+
+We begin our analysis by looking at the UMM with random intercepts for schools and classrooms, i.e. :
+
+$$Math1st_{ijk} = \beta_{0ijk} + \zeta_{k} + \eta_{jk} + \epsilon_{ijk}$$
+
+where $i$ represents students, $j$ represents classrooms and $k$ represents schools.$\zeta_{k} \sim N(0, \sigma_\zeta^2), \eta_{jk} \sim N(0, \sigma_\eta^2),$ and $\epsilon_{ijk} \sim N(0, \sigma_\epsilon^2)$, all are independent of each other
+
+
+```{r}
+model1 <- lmer(Math1~(1|schoolid/classid),data=classroom)
+summary(model1)
+```
+
+$$ICC_{class}=\frac{85.46}{1146.8+280.68+85.46}\approx.056$$
+$$ICC_{school}=\frac{280.68}{1146.8+280.68+85.46}\approx.186$$
+
+We hence find, from the fit summary above, that the equation for our model is:
+
+
+$$Math1st_{ijk} = 522.54 + \zeta_{k} + \eta_{jk} + \epsilon_{ijk}$$
+
+$\zeta_{k} \sim N(0, 280.68), \eta_{jk} \sim N(0, 85.46),$ and $\epsilon_{ijk} \sim N(0, 1146.80)$, all are independent of each other
+
+
+
+##Model with School Level Predictors Added
+
+We then add all the school level predictors (that is, "housepov") and report below the model fit :
+
+```{r}
+model2 <- lmer(Math1~housepov+(1|schoolid/classid),data=classroom)
+summary(model2)
+anova(model1, model2, refit = F)
+```
+
+Report the changes in the variances of the random effects:
+
+Change in $\sigma_\zeta^2$: decreased to 250.93 from 280.63
+$\sigma_\eta^2$ decreases to 82.36 from 85.46 
+$\sigma_\epsilon^2$ slightly increases to 1146.95 from 1146.8
+
+The LRT has a p-value of almost zero, $p = 3.39e-05$ , thus we reject the $H_0$: coefficient on Housepov = 0 at $\alpha = 0.05$. That is, we find evidence that it makes sense to include the school level predictor, housepov.
+
+##Model with all Class Level Predictors Added
+
+We now re-run the model after including all the classroom level predictors, that is "mathknow", "yearstea", "mathprep", and report the model fit. 
+
+```{r}
+model3 <- lmer(Math1~housepov+mathknow+yearstea+mathprep+
+                 (1|schoolid/classid),data=classroom)
+summary(model3)
+```
+
+## creating reducted dataset taking away missing data
+
+The variable of interest *Mathknow* includes some missing values. The model for which we have reported the summary above therefore removes the observations for which missing data is present. 
+
+To be able to compare Model 2 (with school level predictors) with Model 3 (with both school level and classroom level predictors), we removed from the dataset students that had missing values, creating a reduced dataset. This left us with a sample of 1081 students. We then re-run model 2 on this reducted dataset and compared it to Model 3. 
+
+```{r}
+classroom_red = na.omit(classroom)
+model2_red <- lmer(Math1~housepov+(1|schoolid/classid),data=classroom_red)
+model3_red <- lmer(Math1~housepov+mathknow+yearstea+mathprep+
+                     (1|schoolid/classid),data=classroom_red)
+
+summary(model3_red)
+anova(model2_red, model3_red, refit = F)
+```
+
+Change in $\sigma_\epsilon^2$ and $\sigma_\eta^2$: 
+$\sigma_\epsilon^2$ decreased to 1136.43, 
+$\sigma_\eta^2$ increased to 94.36; 
+$\sigma_\zeta^2$ = 223.31
+
+A possible reason why $\epsilon$ decreased in this model, but not $\eta$ is that adding the classroom level predictors makes it so that more of the overall variation is explained by "structured" variation (that is, related to the fact that students are in different classrooms) rather than by unstructured ($\epsilon$), so that the latter decreases. However, we also have to note that in this case we are using the reduced dataset, so that some of the changes may be due to the fact that we are using two slightly different datasets. 
+
+The anova test comparing the school level predictor to the model with the classroom predictors has a p-value 0.087, so we fail to reject the null hypothesis at our $\alpha = 0.05$ and conclude that adding classroom level predictors is not necessary, as it does not signficantly improve the model.
+
+
+## Add all student-level predictors
+
+We now include all the student level predictors in our model:
+
+```{r}
+model4 <- lmer(Math1~housepov+mathknow+yearstea+mathprep+sex+minority+
+                 ses+(1|schoolid/classid),data=classroom)
+summary(model4)
+```
+
+We test this new block compared to the model with both school-level and classroom level predictors. 
+
+```{r}
+anova(model3, model4, refit = F)
+```
+
+The LRT test between this two models has a p-value < $2.2*10^{-16}$. Therefore, at our $\alpha = 0.05$, we reject the null hypothesis and conclude that adding this block of predictors is justified. 
+
+
+Changes in variance components :
+
+$\sigma_\epsilon^2$ decreased to 1064.95,
+$\sigma_\eta^2$ decreased to 93.89, and
+$\sigma_\zeta^2$ decreased to 169.45.
+
+We note that adding student-level predictors leads to a decrease in the overall variance of the model. By "controlling" for student-related variables, we also explain the between schools, as students with similar attributes might be similar across schools, hence reducing the overall variance of $\zeta$. 
+
+The final model, with all school level, classroom level, and student level predictors, is:
+
+
+
+$$Math1st_{ijk} = 539.63 + \zeta_{k} + \eta_{jk} + \epsilon_{ijk}  -17.65 * Housepov_k +1.35*Mathknow_{jk} +$$
+$$0.01*YearsTea_{jk} - 0.27* Mathprep_{jk} -0.19* sex_{ijk} + -0.32* minority_{ijk} -0.12*ses_{ijk}$$
+
+With:
+
+$\zeta_{k} \sim N(0, \sigma_\zeta^2), \eta_{jk} \sim N(0, \sigma_\eta^2),$ and $\epsilon_{ijk} \sim N(0, \sigma_\epsilon^2)$, all are independent of each other
+
+
+From the model fit above therefore we find that the fitted model is:
+
+
+$$Math1st_{ijk} = \beta_{0ijk} + \zeta_{k} + \eta_{jk} + \epsilon_{ijk} + \beta_1Housepov_k +\beta_2Mathknow_{jk} +$$
+$$\beta_3YearsTea_{jk} +\beta_4Mathprep_{jk} + \beta_5sex_{ijk} + \beta_6minority_{ijk} + \beta_7ses_{ijk}$$
+
+With:
+
+$\zeta_{k} \sim N(0, 169.45), \eta_{jk} \sim N(0, 93.89),$ and $\epsilon_{ijk} \sim N(0, 1064.95)$, all are independent of each other.
+
+
+##Random Slope for Teacher-level predictor varying at school-level
+
+We try adding a random slope for each teacher level predictor (varying at the school level; one by one - not all together). 
+
+**MATHKNOW** 
+  
+  
+```{r}
+rst.1 <-lmer(Math1~housepov+mathknow+yearstea+mathprep+sex+minority+
+               ses+(1+mathknow||schoolid)+(1|classid),data=classroom)
+summary(rst.1)
+ranova(rst.1,refit=F)
+```
+
+There is no need for the random slope for *MATHKNOW* at a school level as the p value = 1 for the Chi-square test is not  signifcant at $\alpha = 0.05$.
+
+**YEARSTEA**  
+  
+
+```{r}
+rst.2 <-lmer(Math1~housepov+mathknow+yearstea+mathprep+sex+minority+
+               ses+(1+yearstea||schoolid)+(1|classid),data=classroom)
+summary(rst.2)
+ranova(rst.2, refit=F)
+```
+
+There is no need for the random slope for *YEARSTEA* at a school level as the p value = 0.93 for the Chi-square test is not  signifcant at $\alpha = 0.05$.
+
+**Mathprep**
+
+```{r}
+rst.3 <-lmer(Math1~housepov+mathknow+yearstea+mathprep+sex+minority+
+               ses+(1+mathprep||schoolid)+(1|classid),data=classroom)
+summary(rst.3)
+ranova(rst.3, refit=F)
+```
+
+There is no need for the random slope for *MATHPREP* at a school level as the p value = 1 for the Chi-square test is not  signifcant at $\alpha = 0.05$.
+
+
+\textbf{Question: Why is a random slope on housepov a bad idea?}
+
+\textbf{Answer:} There is only one data point per school, so we do not have enough information to calculate the slope for each school.
+
+##Allowing correlations with random intercepts
+
+## ONE BY ONE
+
+Again, we add random slopes for each teacher-level predictor varying at the school level, but this time by allowing them to be correlated with the random intercepts. 
+
+**MATHKNOW**  
+
+
+```{r}
+rstc.1 <-lmer(Math1~housepov+mathknow+yearstea+mathprep+sex+minority+
+                ses+(1+mathknow|schoolid)+(1|classid),data=classroom)
+summary(rstc.1)
+ranova(rstc.1, refit=F)
+```
+
+There is no need for the random slope for math knowledge at a school level as the p value = 1.00 for the Chi-square test is not  signifcant at $\alpha = 0.05$.
+
+**YEARSTEA**  
+
+```{r}
+rstc.2 <-lmer(Math1~housepov+mathknow+yearstea+mathprep+sex+minority+
+                ses+(1+yearstea|schoolid)+(1|classid),data=classroom)
+summary(rstc.2)
+ranova(rstc.2,refit=F) 
+```
+
+There is no need for the random slope for yearstea at a school level as the p value = 0.054 for the Chi-square test is not  signifcant at $\alpha = 0.05$.
+
+
+**MATHPREP**
+
+```{r}
+rstc.3 <-lmer(Math1~housepov+mathknow+yearstea+mathprep+sex+minority+
+                ses+(1+mathprep|schoolid)+(1|classid),data=classroom)
+summary(rstc.3)
+ranova(rstc.3, refit=F)
+```
+
+There is no need for the random slope for mathprep at a school level as the p value = 0.09 for the Chi-square test is not  signifcant at $\alpha = 0.05$.
+
+
+\textbf{Question:} Anything unusual about the variances? Why might this have occurred? (hint: what did you add to the model?)
+
+\textbf{Answer:} We note that the model did not estimate the correlation parameter correctly for the models with random slopes for mathknown and mathprepr. Indeed, with a correaltion of respectively 1 and -1 with the random intercept, the parameter is a linear function of the variance component for the slope. This could be due to the fact that there is not enough classrooms in the schools (as we are adding random effects at the school levels, for classroom level predictors), so that there is not enough degrees of freedom, nor enough variation among the variables of interest, to calculate all the parameters required in the model. Obtaining a correlation of 1 and -1 should warn us of the fact that the models generated should not be trusted.  
+Why is the correlation between random intercept and slope then calculated for yearstea? This could be due to the fact that this variable has a larger range, so that it can be more robustly estimated for some of the schools and the correlation between random slope and intercept then estimated more accurately even for schools with few classes.
+
+
+##Random slopes for student-level predictors varying at classroom level
+
+We now repeat the exercise by adding student level predictors, varying at the classroom level. 
+
+##ONE BY ONE
+
+
+**SEX**  
+
+
+```{r}
+rss.1 <-lmer(Math1~housepov+mathknow+yearstea+mathprep+sex+minority+
+               ses+(1+sex||classid)+(1|schoolid),data=classroom)
+summary(rss.1)
+ranova(rss.1, refit=F)
+```
+
+There is no need for the random slope for sex at the classroom level, as the p value = 1 for the Chi-square test is not  signifcant at $\alpha = 0.05$.
+
+
+**MINORITY**  
+
+```{r}
+rss.2 <-lmer(Math1~housepov+mathknow+yearstea+mathprep+sex+minority+
+               ses+(1+minority||classid)+(1|schoolid),data=classroom)
+summary(rss.2)
+ranova(rss.2, refit=F)
+```
+
+
+There is no need for the random slope for minority at the classroom level, as the p value = 1 for the Chi-square test is not  signifcant at $\alpha = 0.05$.
+
+
+**SES**  
+
+
+```{r}
+rss.3 <-lmer(Math1~housepov+mathknow+yearstea+mathprep+sex+minority+
+               ses+(1+ses||classid)+(1|schoolid),data=classroom)
+summary(rss.3)
+ranova(rss.3, refit=F)
+```
+
+There is no need for the random slope for ses at the classroom level, as the p value = 0.206 for the Chi-square test is not  signifcant at $\alpha = 0.05$.
+
+\textbf{Question:} why is this a bad idea to include a classroom-level variable with random slopes at classroom-level?
+
+\textbf{Answer:}  Because all of the observations for a class will be the same, so we will not be able to compute the classroom slopes for each classroom (as we will only have one point).
+
+
+##Allowing for correlations with random intercepts
+
+##ONE BY ONE
+
+
+**SEX**  
+
+```{r}
+rssc.1 <-lmer(Math1~housepov+mathknow+yearstea+mathprep+sex+minority+
+                ses+(1+sex|classid)+(1|schoolid),data=classroom)
+summary(rssc.1)
+ranova(rssc.1, refit=F)
+```
+
+There is no need for the (correlated) random slope for sex at the classroom level, as the p value = 0.779 for the Chi-square test is not  signifcant at $\alpha = 0.05$.
+
+**MINORITY**    
+
+
+```{r}
+rssc.2 <-lmer(Math1~housepov+mathknow+yearstea+mathprep+sex+minority+
+                ses+(1+minority|classid)+(1|schoolid),data=classroom)
+summary(rssc.2)
+ranova(rssc.2)
+```
+
+There is no need for the (correlated) random slope for minority at the classroom level, as the p value = 0.202 for the Chi-square test is not  signifcant at $\alpha = 0.05$.
+
+**SES**  
+ 
+```{r}
+rssc.3 <-lmer(Math1~housepov+mathknow+yearstea+mathprep+sex+minority+
+                ses+(1+ses|classid)+(1|schoolid),data=classroom)
+summary(rssc.3)
+ranova(rssc.3)
+```
+
+There is no need for the (correlated) random slope for minority at the classroom level, as the p value = 0.147 for the Chi-square test is not  signifcant at $\alpha = 0.05$.
+
+##Random slopes for student-level predictors varying at school level
+
+##ONE BY ONE
+
+**Sex**
+
+```{r}
+rss.4 <-lmer(Math1~housepov+mathknow+yearstea+mathprep+sex+minority+
+               ses+(1+sex||schoolid)+(1|classid),data=classroom)
+summary(rss.4)
+ranova(rss.4, refit=F)
+```
+
+The uncorrelated sex random slope at a school level is insignifcant with a p value of .433.
+
+**Minority**
+
+```{r}
+rss.5 <-lmer(Math1~housepov+mathknow+yearstea+mathprep+sex+minority+
+               ses+(1+minority||schoolid)+(1|classid),data=classroom)
+summary(rss.5)
+ranova(rss.5,refit=F)
+```
+
+The uncorrelated minority random slope at school level is insignificant with a pvalue of 1.0.
+
+**SES**
+
+```{r}
+rss.6 <-lmer(Math1~housepov+mathknow+yearstea+mathprep+sex+minority+
+               ses+(1+ses||schoolid)+(1|classid),data=classroom)
+summary(rss.6) #IS SIG
+ranova(rss.6,refit=F)
+```
+
+The uncorrelated ses random slope at school level is signifcant with a p value of .03.
+
+##Allowing for correlations with random intercepts
+
+##ONE BY ONE
+
+**Sex**
+
+```{r}
+rssc.4 <-lmer(Math1~housepov+mathknow+yearstea+mathprep+sex+minority+
+                ses+(1+sex|schoolid)+(1|classid),data=classroom)
+summary(rssc.4)
+ranova(rssc.4, refit=F)
+```
+
+The correlated sex random slope at school-level is insignificant with a pvalue of .394.
+
+**Minority**
+
+```{r}
+rssc.5 <-lmer(Math1~housepov+mathknow+yearstea+mathprep+sex+minority+
+                ses+(1+minority|schoolid)+(1|classid),data=classroom)
+summary(rssc.5)
+ranova(rssc.5,refit=F) #sig
+```
+
+The correlated minority random slope at school-level is significant with a pvalue of .003.
+
+**SES**
+
+```{r}
+rssc.6 <-lmer(Math1~housepov+mathknow+yearstea+mathprep+sex+minority+
+                ses+(1+ses|schoolid)+(1|classid),data=classroom)
+summary(rssc.6)
+ranova(rssc.6,refit=F) #not sig
+```
+
+The correlated ses random slope at school-level is not significant with a p-value of .08.
+
+
+\textbf{Question: Report unusual changes in variance.}
+
+\textbf{Answer:} Perhaps most striking is the change in variance for the random slope term on minority. Previously, it was 0. However, it jumps to 343.13 in the correlated model. The variance for the random slope term on SES also increases, but the correlated random slope is not a significant addition to our model according to the rand test results.
+
+##Complex model 
+
+Take two predictors that had sig random slopes and add to model, test for need of one conditional on the other
+
+-Minority is sig for correlated
+
+-Ses is sig for uncorrelated
+
+```{r}
+complex <-lmer(Math1~housepov+mathknow+yearstea+mathprep+sex+minority+
+                 ses+(0+ses|schoolid)+(1+minority|schoolid)+(1|classid),data=classroom)
+summary(complex)
+ranova(complex, refit=F)
+```
+
+\textbf{Question:} Is the more complex model (with both random slopes in it) justified?
+
+\textbf{Answer:} The complex model is justified since the rand test shows that the random slopes are both statistically significant at the 0.05 level, the only question revolves around statistical significance justifying compared to the Bayesian approach that would push for a simpler model.
+
+The equation for the complex model is given by the following:
+
+$Math1st_{ijk} = \beta_0 + \beta_1*housepov_{k} + \beta_2*mathknow_{jk} + \beta_3*yearstea_{jk} + \beta_4*mathprep_{jk} + \beta_5*sex_{ijk} + \beta_{6k}*ses_{ijk} + \beta_{7k}*minority_{ijk} + \zeta_{0k} + \zeta_{6k} + \zeta_{7k} + eta_{jk} + \epsilon_{ijk}$
+
+where $\zeta_{0k} \sim N(0, \sigma_{\zeta_0}^2),\zeta_{6k} \sim N(0, \sigma_{\zeta_6}^2), \zeta_{7k} \sim N(0, \sigma_{\zeta_7}^2), \eta_{jk} \sim N(0, \sigma_\eta^2),$ and $\epsilon_{ijk} \sim N(0, \sigma_\epsilon^2)$, all independent of each other.
+
+------------------------------------------------------------------------------
+
+```{r}
+summary(model1)
+```
+
+\textbf{Question:} For UCM, write down: $V_C$, $V_S$, $V_E$ for the three variance components (simply the estimates). Think of them as possibly varying with a covariate, though.
+
+\textbf{Answer:} For the UCM, $V_C$ = 85.46, $V_S$ = 280.68, and $V_E$ = 1146.80
+
+```{r}
+summary(model4)
+```
+
+\textbf{Question:} For the most complicated (all fixed effects) random INTERCEPTS ONLY model, what are: $V_C$, $V_S$, $V_E$?
+
+\textbf{Answer:} For the most complicated fixed effects model with only random intercepts, $V_C$ = 93.89, $V_S$ = 169.45, and $V_E$ = 1064.95.
+
+\textbf{Question:} By what fraction did these each decrease with the new predictors in the model?
+
+\textbf{Answer:} $V_C$ increased by $\frac{93.89}{85.46} \sim 1.10$ times.
+                 $V_S$ decreased by $\frac{169.45}{280.68}\sim 0.60$ times.
+                 $V_E$ decreased by $\frac{1064.95}{1146.80}\sim 0.93$ times.
+
+```{r}
+summary(rss.6)
+```
+
+\textbf{Question:} Now consider the model with a random slope in ses. What are: $V_C$, $V_S(ses=0)$, $V_E$ ? We need to list 'ses=0' here, or we don't know how to use the slope variance
+
+\textbf{Answer:} For the model with a random slope in ses at the school level, $V_C$ = 88.56, $V_S(ses=0)$ = 167.98, and $V_E$ = 1035.12.
+
+\textbf{Question:} What are: $V_S(ses=-0.50)$, $V_S(ses=+0.5)$ ?
+
+\textbf{Answer:} In this model, in which the random slope for SES is uncorrelated with the random school-level intercept, $V_S(ses=-0.50) = 167.98 + (-.5)^272.50 + 2(-.5)0*\sqrt{167.98}*\sqrt{72.50} = 186.105$, and $V_S(ses=+0.5) = 167.98 + (.5)^272.50 + 2*(.5)0*\sqrt{167.98}*\sqrt{72.50} = 186.105$
+
+```{r}
+summary(rssc.5)
+```
+
+\textbf{Question:} Now consider the model with a random slope in minority. What are: $V_C$, $V_S(minority=0)$, $V_E$? We need to list 'minority=0' here, or we don't know how to use the slope variance
+
+\textbf{Answer:} For the model with a random slope in minority at the school level, $V_C$ = 86.69, $V_S(minority=0)$ = 381.20, and $V_E$ = 1039.39.
+
+\textbf{Question:} What are: $V_S(minority=0.25)$, $V_S(minority=+0.50)$, $V_S(minority=+0.75)$?
+
+\textbf{Answer:} In this model, in which the random slope for minority is correlated with the random school-level, intercept, $V_S(minority=0.25) = 381.20 + (0.25)^2343.13 + 2(0.25)(-0.83)\sqrt{381.20}*\sqrt{343.13} = 252.5549$,
+
+$V_S(minority=+0.50) = 381.20 + (0.50)^2343.13 + 2(0.50)(-0.83)\sqrt{381.20}*\sqrt{343.13} = 166.801$, and
+
+$V_S(minority=+0.75) = 381.20 + (0.25)^2343.13 + 2(0.25)(-0.83)\sqrt{381.20}*\sqrt{343.13} = 123.9384$.
+
+```{r}
+summary(complex)
+```
+
+\textbf{Question:} Now consider the model with a random slope in ses & minority. What are: $V_C$, $V_S(minority=0,ses=0)$, $V_E$? We need to list 'ses=0, minority=0' here, or we don't know how to use the slope variance.
+
+\textbf{Answer:} For the model with a random slope in ses & minority, $V_C$ = 80.63, $V_S(minority=0,ses=0)$ = 404.54, and $V_E$ = 1009.73.
+
+\textbf{Question:} What are: $V_S(ses=0,minority=0.50)$, $V_S(ses=0.50,minority=0)$, $V_S(ses= 0.50, minority= 0.50)$?
+
+\textbf{Answer:} In this model, in which the random slope for ses is uncorrelated with the random intercept, but the random slope for minority is correlated with the random intercept,
+
+$V_S(ses=0,minority=0.50) = 404.54 + (0)^2*74.93 + (0.50)^2*336.04 + 2*404.54*74.93 + 2*(0.50)(-0.83)\sqrt{404.54}*\sqrt{336.04} = 182.5268$,
+
+$V_S(ses=0.50,minority=0) = 404.54 + (0.50)^2*74.93 + (0)^2*336.04 + 2*0.5*404.54*74.93 + 2*(0)(-0.83)\sqrt{404.54}*\sqrt{336.04} = 423.2725$
+
+$V_S(ses= 0.50, minority= 0.50) = 404.54 + (0.50)^2*74.93 + (0.50)^2*336.04 + 2*0.5*404.54*74.93 + 2*(0.50)(-0.83)\sqrt{404.54}*\sqrt{336.04} = 201.2593$
+
+\textbf{Question:} In the last model, what is a "likely" (+/- 1 sd) range for $\eta_{0jk}$
+
+\textbf{Answer:} For the complex model, the "likely" range for $\eta_{0jk}$ is $(-8.979,8.979)$.
+
+\textbf{Question:} Can we make a similar statement about $\zeta_{0k}$?
+
+\textbf{Answer:} We cannot make a similar statement for $\zeta_{0k}$ since it is correlated with $\zeta_{2k}$ on *Minority*.
+
+\textbf{Question:} If you had a large value for $\eta_{0jk}$, would you expect a large or small or "any" value for: the two random slope terms, $\zeta_{1k}$ and $\zeta_{2k}$ for ses and minority?
+
+\textbf{Answer:} There is no correlation between $\eta_{0jk}$ (classroom-level intercept) and the school-level random slopes $\zeta_{1k}$ and $\zeta_{2k}$ on *SES* and *MINORITY*. Therefore, we would not expect a large value of $\eta_{0jk}$ to have any effect on the two random slope terms as they are independent. 
+
+\textbf{Question:} If you had a large value for $\zeta_{0k}$, would you expect a large or small or "any" value for: the two random slope terms, $\zeta_{1k}$ and $\zeta_{2k}$ for ses and minority (discuss each separately)?
+
+\textbf{Answer:} $\zeta_{1k}$ could be any value due to the lack of correlation with $\zeta_{0k}$
+
+\textbf{Answer:} While $\zeta_{2k}$ would be small given a large value of $\zeta_{0k}$ because of the negative correlation between the two variables.
+
+---------------------------------------------------------------------------------
+
+# Part 2: Clare
+
+##Running initial model
+
+The initial model was run on a smaller dataset with 1081 observations due to missing data. School-level and classroom-level random intercepts are included in the model.
+
+```{r pt2 q1}
+#remove missing data -- not ideal, but have to do it for this analysis
+classroom <- classroom %>% mutate(Math1st = mathkind + mathgain)
+classroom2 <- na.omit(classroom)
+#model
+new1 <-lmer(Math1st~housepov+mathknow+yearstea+mathprep+sex
+            +minority+ses+(1|schoolid)+(1|classid),data=classroom2)
+```
+
+##Residual that removes only the "fixed effects"
+
+Below we calculate the residuals that removes only the fixed effects. The boxplot of the residuals shows that there is great variation within schools and that there is a steady linear trend to the residuals, suggesting dependence. 
+
+```{r pt2 q2}
+#predicted scores
+pred.yhat <- predict(new1,re.form=~0)
+
+#residual
+resFE <- classroom2$Math1st-pred.yhat
+
+#show that it's not independent
+if (vanillaR) {
+ord <- order(unlist(tapply(resFE, classroom2$schoolid, median)))
+boxplot(split(resFE, classroom2$schoolid)[ord])
+} else {
+ggplot(classroom2, aes(x = reorder(schoolid, resFE, FUN = median), y = resFE)) +
+geom_boxplot()
+}
+```
+
+##Residuals for BLUPs random effects
+
+The residuals for the BLUPs random effects are calculated below. The boxplot reveals a similar dependency to the previous plot, though not as pronounced. There doesn't seem to be as high a correlation as there is in the other residuals plot. 
+
+```{r pt2 q3}
+#getting predicted zeta_0 and eta_0
+ranefs <- ranef(new1)
+zeta0 <- ranefs$schoolid[,1]
+eta0 <- ranefs$classid[,1]
+#indexing
+idx.sch <- match(classroom2$schoolid, sort(unique(classroom2$schoolid))) 
+idx.cls <- match(classroom2$classid, sort(unique(classroom2$classid))) 
+classroom2$zeta0 <- zeta0[idx.sch]
+classroom2$eta0 <- eta0[idx.cls]
+#now subtract all from outcome
+resFE_RE <- classroom2$Math1st-pred.yhat-classroom2$zeta0-classroom2$eta0
+#show that it's not independent, but much less correlated than resFE
+if (vanillaR) {
+ord <- order(unlist(tapply(resFE_RE, classroom2$schoolid, median)))
+boxplot(split(resFE_RE, classroom2$schoolid)[ord])
+}else{
+ggplot(classroom2, aes(x = reorder(schoolid, resFE_RE, FUN = median), y = resFE_RE)) +
+geom_boxplot()
+}
+```
+
+## Examining BLUPs for normality
+
+To examine the BLUPs for mormality, density plots and Q-Q plots were constructed. Both $zeta_0$ and $eta_0$ appear to be normal, with a few poossible outliers near the tails. 
+
+```{r blups normality, fig.width=6, fig.height=4}
+par(mfrow=c(2,2))
+plot(density(zeta0), main ="Normality Check for Zeta")
+plot(density(eta0), main = "Normality Check for Eta")
+#looking good
+qqnorm(zeta0);qqline(zeta0)
+qqnorm(eta0);qqline(eta0)
+#looking good
+```
+
+##Simulation
+
+Below is a simulation based on the H0 being true, and a $\sigma_{\epsilon} = 1$. We find that the potential estimate is very close to 0, which we would expect since our $\sigma^2_{\zeta_0}$ has a "true" value of 0. 
+
+```{r blups simulation}
+set.seed(10314)
+school.sim <- matrix(1,10,100)
+means <- NULL
+for (i in 1:100){
+school.sim[,i] <- rnorm(10,mean=0, sd=1)
+means[i] <- mean(school.sim[,i])
+}
+plot(density(means), main = "Density of Zeta0")
+#we see the density is concentrated around 0
+paste("A potential estimate of sigma_{zeta_0} is ",mean(means))
+```
+
+##New Complex Model
+
+We now include a correlated random slope at the school-level for minority. 
+
+```{r new complex model}
+classroom <- read.csv("classroom.csv")
+classroom <- classroom %>% mutate(Math1st = mathkind+mathgain)
+classroom2 <- na.omit(classroom)
+newcomplex <-lmer(Math1st~housepov+mathknow+yearstea+mathprep+sex+minority+ses+
+                    (minority|schoolid)+(1|classid),data=classroom2)
+summary(newcomplex)
+```
+
+##Manually calculate residuals for fixed effects
+
+In the new model, we see a similar pattern of dependency. There is a general positive, linear trend to the residuals, and there is heterogeneity of variance across and within schools. These findings all suggest dependence.
+
+```{r complex resFE}
+#predicted scores
+pred.yhat2 <- predict(newcomplex,re.form=~0)
+
+#residual
+resFE2 <- classroom2$Math1st-pred.yhat2
+
+#show that it's not independent
+if (vanillaR) {
+ord <- order(unlist(tapply(resFE2, classroom2$schoolid, median)))
+boxplot(split(resFE2, classroom2$schoolid)[ord])
+} else {
+ggplot(classroom2, aes(x = reorder(schoolid, resFE2, FUN = median), y = resFE2)) +
+geom_boxplot()
+}
+```
+
+##Residuals from BLUPs random effects
+
+The residuals from the BLUPs random effects are calculated below. The boxplot of the residuals appears to be only slightly correlated, partly due to the uptake near the final set of schools on the x-axis. Although the correlation of the residuals is probably near 0, there is still enough variation within schools, and enough of a correlation in the data to suggest dependence. 
+
+```{r complex blup residuals}
+#getting predicted zeta_0 and eta_0
+ranefs2 <- ranef(newcomplex)
+zeta0c <- ranefs2$schoolid[,1]
+eta0c <- ranefs2$classid[,1]
+zeta1c <- ranefs2$schoolid[,2]
+#indexing
+idx.sch <- match(classroom2$schoolid, sort(unique(classroom2$schoolid))) 
+idx.cls <- match(classroom2$classid, sort(unique(classroom2$classid))) 
+classroom2$zeta0c <- zeta0c[idx.sch]
+classroom2$eta0c <- eta0c[idx.cls]
+classroom2$zeta1c <- zeta1c[idx.sch]
+#now subtract all from outcome
+resFE_RE2 <- classroom2$Math1st-pred.yhat-classroom2$zeta0c-classroom2$eta0c-(classroom2$minority*classroom2$zeta1c)
+#show that it's not independent, but much less correlated than resFE
+if (vanillaR) {
+ord <- order(unlist(tapply(resFE_RE2, classroom2$schoolid, median)))
+boxplot(split(resFE_RE2, classroom2$schoolid)[ord])
+}else{
+ggplot(classroom2, aes(x = reorder(schoolid, resFE_RE2, FUN = median), y = resFE_RE2)) +
+geom_boxplot()
+}
+```
+
+##Examining Normality of BLUPs
+
+Below we examine the normality of $\zeta_0$ and $\eta_0$. The density and Q-Q plots for $\eta_0$ suggest normality, with a possibility of a few outliers near the tails. The normality of $\zeta_0$ is more questionable. The tails do not appear to fit a normal distribution.
+
+```{r complex blup normality}
+par(mfrow=c(2,2))
+plot(density(zeta0c), main ="Normality Check for Zeta")
+plot(density(eta0c), main = "Normality Check for Eta")
+# eta looks pretty normal
+#zeta not so much
+qqnorm(zeta0c, main = "Q-Q Plot for Zeta");qqline(zeta0c)
+qqnorm(eta0c, main = "Q-Q Plot for Eta");qqline(eta0c)
+#zeta looking iffy, but with a few possible outliers
+#eta good too, with few outliers. 
+```
+
+## Plotting $\zeta_0$ versus $\zeta_1$
+
+The correlation between $\zeta_0$ and $\zeta_1$ in the output is -0.83. The graph below suggests a moderate negative trend, but there are some outliers that do not support this trend. Rather, they seem to be positively related. 
+
+*Note: the labels were put in rainbow in order to better discern their locations.
+
+```{r plotting the zetas}
+plot(classroom2$zeta0c,classroom2$zeta1c, main = "Zeta0 vs. Zeta1", 
+     ylab = "Zeta1",xlab = "Zeta0", pch=19)
+ text(classroom2$zeta0c,classroom2$zeta1c, labels = classroom2$schoolid,
+      cex = 0.8, col = rainbow(100), pos = 1)
+```
+
+
+##Tracking down outliers
+
+The outliers from the plots above can be tracked down by examining the data points via their IDs. 
+
+```{r complex outliers}
+classroom2$zeta0c[classroom2$schoolid==45][[1]]/classroom2$zeta1c[classroom2$schoolid==45][[1]]
+classroom2$zeta0c[classroom2$schoolid==68][[1]]/classroom2$zeta1c[classroom2$schoolid==68][[1]]
+classroom2$zeta0c[classroom2$schoolid==30][[1]]/classroom2$zeta1c[classroom2$schoolid==30][[1]]
+
+#there seems to be a trend here that the zeta0/zeta1 ratio is > 3, so let's filter it out
+outliers <- classroom2 %>% filter(round(zeta0c/zeta1c,6)==1.868107) %>% select(zeta0c,zeta1c,schoolid,minority)
+#now let's make sure the IDs from the plot are showing up here
+unique(outliers$schoolid)
+#They are! Now what's going on with minority?
+table(outliers$minority)
+tapply(outliers$minority, INDEX = outliers$schoolid, FUN = sum)
+#The values match -- all students are minorities!
+```
+
+It seems like the (perfectly) positive trend in the data is being driven by schools in which all the students are minorities. That is, in schools in which there are only minority students, all other factors held equal, there is a boost in math scores in 1st grade for minority students. In a way, being in a totally minority school is a "protective" factor for minority students.
+
+------------------------------------------------------------------------------------
+
+# Part 3: Bianca
+
+## Create person-period file
+
+In this part of the project, no variables of interested have missing observation. Therefore, the full dataset is used. 
+
+```{r person-period file}
+#new variables
+classroom2 <- classroom2 %>% mutate(math0 = mathkind) %>% mutate(math1 = mathkind+mathgain)
+#reshape the data
+class_pp <- reshape(classroom2, varying = c("math0", "math1"), v.names = "math", timevar = "year",
+times = c(0, 1), direction = "long")
+```
+
+Note: we ignore classroom in this analysis but keep it in the notation. 
+
+## Initial longitudinal model
+
+We fit a model with math as outcome, and fixed effect for time trend (year), as well as random intercept for school.
+
+The equation for the model below:
+
+$$Math_{tijk} = b_0 + \zeta_{0k} + b_1*Time_{tijk} + \epsilon_{tijk}$$
+
+where $\zeta_{0k} \sim N(0, \sigma_{zeta0}^2)$ and $\epsilon_{tijk} \sim N(0, \sigma_{\epsilon}^2)$
+
+We refer to this as Model 0.
+
+
+Below the model fit:
+
+```{r pp model1}
+fit1 <- lmer(math ~ year + (1|schoolid), data = class_pp)
+summary(fit1)
+```
+
+## Add child-level random intercept
+
+
+To the previous model, we now add random intercepts for child:
+
+$$Math_{tijk} = b_0 + \delta_{0ijk} + \zeta_{0k} + b_1*Time_{tijk} + \epsilon_{tijk}$$
+
+where $\delta_{0tijk} \sim N(0, \sigma_{\delta_0}^2), \zeta_{0k} \sim N(0, \sigma_{zeta0}^2)$ and $\epsilon_{tijk} \sim N(0, \sigma_{\epsilon}^2)$ independetly of one another. 
+
+We refer to this as M1. 
+
+
+```{r pp model2}
+fit2 <- lmer(math ~ year + (1|schoolid/childid), data = class_pp)
+summary(fit2)
+```
+
+In model 0 the variance $\sigma_{\zeta_0}^2 = 348.7$ and in model 1  $\sigma_{\zeta_0}^2 = 307.5$.  
+In model 0 , the varaince for $\sigma_{\epsilon}^2 = 1268.4$ and in model 1 $\sigma_{\epsilon_0}^2 = 599.1$. We note that including child-level variation leads to a decrease in the variance of both the random effects. 
+
+## Compute Pseudo-R^2
+
+Compute a pseudo R^2 relating the between school variation and ignoring between students in the same school. 
+
+We calculate this as :
+
+$$\frac{\sigma_{\zeta_0}^2(M_0) - \sigma_{\zeta_0}^2(M_1)}{\sigma_{\zeta_0}^2(M_0)} = \frac{348.7-307.5}{348.7} = 0.12$$
+The between-school variance is reduced by 12% ( or 'explained') with the introduction of student random effect. 
+
+\textbf{Does the total variation stay about the same?}
+
+```{r pp mods totvariance}
+tot_m0 = 348.7 + 1268.4
+tot_m1 = 702 + 307.5 + 599.1 
+paste("Tot variance for model 0 : ", tot_m0)
+paste("Tot variance for model 1: ", tot_m1)
+
+```
+
+There is only a slightly decrease in the total variance between Model 0 and Model1. 
+
+## Add a random slope for time trend
+
+We now add a random slope ($\zeta_1$) for time trend within schools.
+
+$$Math_{tijk} = b_0 + \delta_{0ijk} + \zeta_{0k} + (b_1 + \zeta_{1k})*Time_{tijk} + \epsilon_{tijk}$$
+
+where $\delta_{0tijk} \sim N(0, \sigma_{\delta_{0ijk}}^2), \quad \zeta_{0k} \sim N(0, \sigma_{\zeta_{0}}^2), \quad \zeta_{1k} \sim N(0, \sigma_{\zeta_{0}}^2)$ and $\epsilon_{tijk} \sim N(0, \sigma_{\epsilon}^2)$ -- each independetly of one another. 
+
+We refer to this as Model 2
+
+We run the model and report the fit:
+
+```{r pp mod3}
+fit3 = lmer(math ~ year + (1 + year|| schoolid) + (1|childid), data = class_pp)
+summary(fit3)
+```
+
+
+## Generate the BLUPs for this model (Model 2)
+
+Examine then whether the independence between zeta0 and zeta1 is reflected in a scatterplot of these two sets of effects. 
+
+
+
+```{r pp blups}
+pp_ranefs <- ranef(fit3)
+
+if (vanillaR) {
+plot(pp_ranefs$schoolid[,2],pp_ranefs$schoolid[,1]) 
+}else{
+ggplot(pp_ranefs$schoolid, aes(x = pp_ranefs$schoolid[,2], y = pp_ranefs$schoolid[,1] )) +
+geom_point() + labs(x = "Zeta_{0k} BLOPs", y = "Zeta_{1k} BLOps") + theme_minimal()
+}
+```
+
+From the plot, the BLOPs for $\zeta_{0k}$ and for $\zeta_{1k}$ appear uncorrelated, reflecting the way in which the model was built. 
+In the BLUPS, we have a correlation of:
+
+```{r}
+cor(pp_ranefs$schoolid[,2],pp_ranefs$schoolid[,1]) 
+corrtestp = cor.test(pp_ranefs$schoolid[,2],pp_ranefs$schoolid[,1], 
+                    method = "pearson")$p.value
+
+paste("P-value for pearson test for correlatio:", round(corrtestp,3))
+
+
+```
+
+That is, between the slope random effects and the ranom intercept blups, there is a very small negative correlation, which is not significantly different from 0 -- which we see from the plot and would expect from how we have specified the model. 
+
+
+## Heteroscedasticity in the random effects
+
+\textbf{Question:} What are: $V_S(year = 0)$, $V_S(year = 1)$?
+
+The model we are considering is :
+
+$Math_{tijk} = b_0 + \delta_{0tijk} + \zeta_{0k} + (b_1 + \zeta_{1k})Time_{tijk} + \epsilon_{tijk}$
+
+So we have that (in this model, in which we are forcing correlation of 0 between slope and intercept):
+
+-  $V_S(year = 0) = \sigma_{\zeta_{0k}}^2 = 324.79$
+-  $V_S(year = 1) = \sigma_{\zeta_{0k}}^2 + \sigma_{\zeta_{1k}}^2 = 88.67 + 324.79 = 413.46$
+
+## Run model separately by year
+
+We now examine what happens if we run the model separately by year. Do we get the same estimates for the variance between schools?
+
+```{r}
+class_year0 = class_pp[class_pp$year == 0,]
+
+
+# Run model for year 0
+fit4 = lmer(math ~ (1 | schoolid), data = class_year0)
+summary(fit4)
+
+# Run modelfor year 1
+class_year1 = class_pp[class_pp$year == 1,]
+fit5 = lmer(math ~ (1 | schoolid), data = class_year1)
+summary(fit5)
+```
+
+In this case, for the Year 0 Model, we get an estimated $\hat{\sigma}^2_{\zeta_{0k}} = 364.3$, while for Year 1 Model, we have $\hat{\sigma}^2_{\zeta_{0k}} = 306.8$. We note that these estimates are different from the ones computed above. 
+
+## Allow for correlation 
+
+We now allow for correlation between the random effects for the intercept and the slope. We call this Model 3. 
+
+```{r}
+fit6 = lmer(math ~ year + (1 + year| schoolid) + (1|childid), data = class_pp)
+summary(fit6)
+
+```
+
+Correlation beteween $\zeta_0$ and $\zeta_1$ = -0.45. 
+
+To test whether the correlation is statistically significant, we can compare Model 2 with Model 3 using an anova test. 
+
+```{r}
+anova(fit3,fit6, refit = F)
+```
+With a p-value $p = 0.003$, we reject the null hypothesis at $\alpha = 0.05$ significance level, and conclude that there correlation term is statistically significant. 
+
+
+So we have that (in this model where we are allowing for correlation between slope and intercept):
+
+-  $V_S(year = 0) = \sigma_{\zeta_{0k}}^2 = 370.6$
+-  $V_S(year = 1) = \sigma_{\zeta_{0k}}^2 + \sigma_{\zeta_{1k}}^2 + 2\rho_{01}\sigma_{\zeta_{0k}}\sigma_{\zeta_{1k}}= 370.6 + 109.1 - 2*0.45*\sqrt{370.6}\sqrt{109.1} = 298.72$
+
+
+
+These estimates are a lot closer to the school variances that result from fitting the models for the two years separately (in which we have $\sigma_{\zeta}^2$ respectively be 364.3 for year 0 and 306.8 for year 1). 
+
+Therefore, it seems that the model that allows for correlation between the two random effects has a better fit than the one forcing that correlation to be 0. 
+
+-----------------------------------------------------------------------------
+
+#Part 4: Kaushik
+
+## Reload the data and make person-period file
+
+A reduced dataset was used for this analysis since there is missing data for one of the variables of interest. We acknowledge that this is not ideal in practice.
+
+```{r part4 person-period}
+#re-read data
+classroom <- read.csv("classroom.csv")
+classroom2 <- na.omit(classroom)
+#new variables
+classroom2 <- classroom2 %>% mutate(math0 = mathkind) %>% mutate(math1 = mathkind+mathgain)
+#reshape the data
+class_pp <- reshape(classroom2, varying = c("math0", "math1"), v.names = "math", timevar = "year",
+times = c(0, 1), direction = "long")
+```
+
+## Baseline model: unconditional growth model
+
+$$MATH_{tijk} = b_0 + \delta_{0ijk} + (b_1 + \zeta_{1k} )TIME_{tijk} + \zeta_{0k} + \epsilon_{tijk} $$
+
+where $t$ represents occasion (in this case, year/grade), $i$ represents students, $j$ represents classrooms and $k$ represents schools. $\delta_{0ijk} \sim N(0,\sigma^2_{\delta_0})$, $\zeta_{0k} \sim N(0,\sigma^2_{\zeta_0})$, $\zeta_{1k} \sim N(0,\sigma^2_{\zeta_1})$ and $\epsilon_{ijk} \sim N(0,\sigma^2_{\epsilon})$ all independent of each other except for $\zeta_{0k}$ and $\zeta_{1k}$ having a correlation $\rho_{\zeta_{0}\zeta_{1}}$.
+
+```{r part4 UGM}
+ugm <- lmer(math ~ year + (year|schoolid) + (1|childid), data=class_pp)
+summary(ugm)
+
+```
+
+##  Add student, classroom and school level fixed effects
+$MATH_{tijk} = b_0 + \delta_{0ijk} + (b_1 + \zeta_{1k} )TIME_{tijk} + b_2SEX_{ijk} +b_3SES_{ijk} + b_4MINORITY_{ijk} + b_5YEARSTEA_{jk} + b_6MATHKNOW_{jk} + b_7MATHPREP_{jk} + b_8HOUSEPOV_{k} + \zeta_{0k} + \epsilon_{tijk}$
+
+where $t$ represents occasion (in this case, year/grade), $i$ represents students, $j$ represents classrooms and $k$ represents schools. $\delta_{0ijk} \sim N(0,\sigma^2_{\delta_0})$, $\zeta_{0k} \sim N(0,\sigma^2_{\zeta_0})$, $\zeta_{1k} \sim N(0,\sigma^2_{\zeta_1})$ and $\epsilon_{ijk} \sim N(0,\sigma^2_{\epsilon})$ all independent of each other except for $\zeta_{0k}$ and $\zeta_{1k}$ having a correlation $\rho_{\zeta_{0}\zeta_{1}}$.
+
+```{r part4 add class school}
+fit2 <- lmer(math ~ year + sex + ses + minority + yearstea + mathknow + mathprep + housepov + (year|schoolid) + (1|childid), data=class_pp)
+summary(fit2)
+
+```
+
+## For year==0:
+*what percent of between school differences were explained as you go from the baseline to the second model?
+
+For the baseline model:
+$$V_{1BS} = \sigma^2_{\zeta_0} + 2*year*\rho_{\zeta_0 \zeta_1}\sigma_{\zeta_0}\sigma_{\zeta_1} + year^2*\sigma^2_{\zeta_1}$$
+
+$$V_{1BS}(year=0) = \sigma^2_{\zeta_0} = 373.5 $$
+
+After adding fixed-effects:
+$$V_{2BS} = \sigma^2_{\zeta_0} + 2*year*\rho_{\zeta_0 \zeta_1}\sigma_{\zeta_0}\sigma_{\zeta_1} + year^2*\sigma^2_{\zeta_1}$$
+$$V_{2BS}(year=0) = \sigma^2_{\zeta_0} = 249.2 $$
+
+The percent difference in between-school variance for $year=0$ is be given by:
+$$ \frac{V_{1BS} - V_{2BS}}{V_{1BS}} = \frac{373.5-249.2}{373.5} = 33.28\% $$
+Model 2 explains $33.28\%$ of the between-school variance for $year=0$.
+
+*what percent of between child differences were explained as you go from the baseline to the second model?
+
+For the baseline model:
+$$V_{1BC}(year=0) = \sigma^2_{\delta_0} = 749.0$$
+
+After adding fixed effects:
+$$V_{2BC}(year=0) = \sigma^2_{\delta_0} = 689.5$$
+
+The percent difference in between-child variance explained by the second model for $year=0$ is given by:
+$$ \frac{V_{1BC} - V_{2BC}}{V_{1BC}} = \frac{749.0-689.5}{749.0} = 7.94\% $$
+Model 2 explains $7.94\%$ of the between-child variance for $year=0$.
+
+## For year==1:
+*what percent of between school differences were explained as you go from the baseline to the second model?
+
+For the baseline model:
+$$V_{1BS} = \sigma^2_{\zeta_0} + 2*year*\rho_{\zeta_0 \zeta_1}\sigma_{\zeta_0}\sigma_{\zeta_1} + year^2*\sigma^2_{\zeta_1}$$
+
+$$V_{1BS}(year=1) = 373.5 + 2(-0.53)(19.33)(10.60) + 112.4 = 268.71$$
+
+After adding fixed-effects:
+$$V_{2BS} = \sigma^2_{\zeta_0} + 2*year*\rho_{\zeta_0 \zeta_1}\sigma_{\zeta_0}\sigma_{\zeta_1} + year^2*\sigma^2_{\zeta_1}$$
+$$V_{2BS}(year=1) =  249.2 + 2(-0.53)(15.79)(10.69) + 114.2 = 184.48$$
+
+The percent difference in between-school variance for $year=0$ is be given by:
+$$ \frac{V_{1BS} - V_{2BS}}{V_{1BS}} = \frac{268.71-184.48}{268.71} = 31.35\% $$
+Model 2 explains $31.35\%$ of the between-school variance for $year=1$.
+
+*what percent of between child differences were explained as you go from the baseline to the second model?
+
+For the baseline model:
+$$V_{1BC}(year=1) = \sigma^2_{\delta_0} = 749.0$$
+
+After adding fixed effects:
+$$V_{2BC}(year=1) = \sigma^2_{\delta_0} = 689.5$$
+
+The percent difference in between-child variance explained by the second model for $year=1$ is given by:
+$$ \frac{V_{1BC} - V_{2BC}}{V_{1BC}} = \frac{749.0-689.5}{749.0} = 7.94\% $$
+Model 2 explains $7.94\%$ of the between-child variance for $year=1$.
+
+## Based on significance, 
+*  what factors seem useful in describing ("explaining") differences between student outcomes? 
+*  Point out the direction of the effect.
+
+$SES$ and $MINORITY$ status are the significant fixed-effects terms in the model at $\alpha=0.05$ implying that these terms (being in Level 1) help to explain the between-student variance conditional on the school. 
+
+The coefficient on $SES$ is positive meaning that two students in the same school and student-level random effect and all else equal, the one with the higher $SES$ has a higher Math score.
+
+The coefficient on $MINORITY$ status is negative meaning that two students in the same school and student-level random effect and all else equal, the one who is classified as a Minority student has a lower Math score.
+
+## Add random slope for SES
+
+$MATH_{tijk} = b_0 + \delta_{0ijk} + (b_1 + \zeta_{1k} )TIME_{tijk} + b_2SEX_{ijk} +(b_3+\zeta_{3k})SES_{ijk} + b_4MINORITY_{ijk} + b_5YEARSTEA_{jk} + b_6MATHKNOW_{jk} +b_7MATHPREP_{jk} + b_8HOUSEPOV_{k} + \epsilon_{tijk}$
+
+where $t$ represents occasion (in this case, year/grade), $i$ represents students, $j$ represents classrooms and $k$ represents schools. $\delta_{0ijk} \sim N(0,\sigma^2_{\delta_0})$, $\zeta_{0k} \sim N(0,\sigma^2_{\zeta_0})$, $\zeta_{1k} \sim N(0,\sigma^2_{\zeta_1})$, $\zeta_{3k} \sim N(0,\sigma^2_{\zeta_3})$ and $\epsilon_{ijk} \sim N(0,\sigma^2_{\epsilon})$ all independent of each other except for $\zeta_{0k}$,  $\zeta_{1k}$ and $\zeta_{3k}$ could be correlated.
+
+```{r part4 rs ses}
+fit3 <- lmer(math ~ year + sex + ses + minority + yearstea + mathknow + mathprep + housepov + (ses+year|schoolid) + (1|childid), data=class_pp)
+summary(fit3)
+
+```
+
+## *is the estimated s.d. (square root of variance) of the random slope associated with SES large enough 
+*  so that a value +/- 1 s.d. is sufficient to "cancel" (or flip the sign) the fixed effect for this predictor?
+
+The estimated standard deviation of the random slope associated with SES is $6.818$. We note that this is not large enough to "cancel" or flip the sign of the fixed-effect on SES within $+/- 1$ standard deviation. 
+
+The majority of the values (middle $68\%$ ) for the fixed effect on SES is within the range $[(9.32191 - 6.818),(9.32191 - 6.818)] = [2.50391,16.13991]$
+
+
+## Residuals and Q-Q Plot
+*compute residuals in this final model.  generate a qq plot and density (STATA: qnorm; kdensity ..., normal) 
+*Is there any reason to question the normality assumption?
+```{r part4 residuals}
+fit3.residuals <- residuals(fit3)
+sm.density(fit3.residuals,model="Normal",xlab="Residuals")
+qqnorm(y=fit3.residuals)
+qqline(y=fit3.residuals,col=2)
+```
+
+The residuals seem to have slightly heavier tails compared to a standard normal distribution. From the density plot, we also note that given the sample size, the peak is slightly higher than expected for a normal distribution. The distribution of residuals does not fall within the expected range given by the blue region although the deviation is minimal. Within a range of 4-sd (between +/- 2 sd), the Residual quantiles are seen to be linear compared to the Theoretical quantiles implying that the residuals are indeed quite normally distributed for the most part. 
+
+## BLUPs for all 4 random effects & Scatter plots
+
+generate an all pairs scatter plot matrix (4x4) of these 
+* note whether or not you identify any concerns from these scatterplots.
+```{r part4 BLUPs}
+ranefs <- ranef(fit3)
+Delta0 <- ranefs$childid
+idx.school <- match(classroom2$schoolid, sort(unique(classroom2$schoolid))) 
+Zeta0 <- ranefs$schoolid[idx.school,1]
+Zeta1 <- ranefs$schoolid[idx.school,2]
+Zeta2 <- ranefs$schoolid[idx.school,3]
+
+ranefs <- data.frame(delta0=Delta0,zeta0=Zeta0,zeta1=Zeta1,zeta2=Zeta2)
+colnames(ranefs) <- c("Delta0","Zeta0","Zeta1","Zeta2")
+pairs(ranefs,cex=0.5)
+```
 
 
