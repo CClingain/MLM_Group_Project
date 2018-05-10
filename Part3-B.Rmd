@@ -22,6 +22,8 @@ classroom <- read.csv("classroom.csv")
 
 ## Create person-period file
 
+In this part of the project, no variables of interested have missing observation. Therefore, the full dataset is used. 
+
 ```{r person-period file}
 #re-read data
 classroom2 <- na.omit(classroom)
