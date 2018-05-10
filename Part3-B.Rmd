@@ -103,7 +103,7 @@ We now add a random slope ($\zeta_1$) for time trend within schools.
 
 $$Math_{tijk} = b_0 + \delta_{0ijk} + \zeta_{0k} + (b_1 + \zeta_{1k})*Time_{tijk} + \epsilon_{tijk}$$
 
-where $\delta_{0tijk} \sim N(0, \sigma_{\delta_{0ijk}^2), \quad \zeta_{0k} \sim N(0, \sigma_{\zeta_{0}}^2), \quad \zeta_{1k} \sim N(0, \sigma_{\zeta_{0}}^2)$ and $\epsilon_{tijk} \sim N(0, \sigma_{\epsilon}^2)$ -- each independetly of one another. 
+where $\delta_{0tijk} \sim N(0, \sigma_{\delta_{0ijk}}^2), \quad \zeta_{0k} \sim N(0, \sigma_{\zeta_{0}}^2), \quad \zeta_{1k} \sim N(0, \sigma_{\zeta_{0}}^2)$ and $\epsilon_{tijk} \sim N(0, \sigma_{\epsilon}^2)$ -- each independetly of one another. 
 
 We refer to this as Model 2
 
